@@ -1,0 +1,229 @@
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Qcow_s" rel="Chapter" href="Qcow_s.html">
+<link title="Qcow_header" rel="Chapter" href="Qcow_header.html">
+<link title="Qcow_error" rel="Chapter" href="Qcow_error.html">
+<link title="Qcow_types" rel="Chapter" href="Qcow_types.html">
+<link title="Qcow_virtual" rel="Chapter" href="Qcow_virtual.html">
+<link title="Qcow_physical" rel="Chapter" href="Qcow_physical.html">
+<link title="Qcow" rel="Chapter" href="Qcow.html"><title>Index of values</title>
+</head>
+<body>
+<div class="navbar">&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;</div>
+<h1>Index of values</h1>
+<table>
+<tr><td align="left"><br></td></tr>
+<tr><td><a href="Qcow_error.html#VAL(>>=)">(&gt;&gt;=)</a> [<a href="Qcow_error.html">Qcow_error</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_header.CryptMethod.html#VAL__t_of_sexp__">__t_of_sexp__</a> [<a href="Qcow_header.CryptMethod.html">Qcow_header.CryptMethod</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_header.Version.html#VAL__t_of_sexp__">__t_of_sexp__</a> [<a href="Qcow_header.Version.html">Qcow_header.Version</a>]</td>
+<td></td></tr>
+<tr><td align="left"><br>B</td></tr>
+<tr><td><a href="Qcow_types.html#VALbig_enough_for">big_enough_for</a> [<a href="Qcow_types.html">Qcow_types</a>]</td>
+<td><div class="info">
+<code class="code">big_enough_for name buf length</code> returns an error with a log message
+    if buffer <code class="code">buf</code> is smaller than <code class="code">length</code>.
+</div>
+</td></tr>
+<tr><td align="left"><br>C</td></tr>
+<tr><td><a href="Qcow.Make.html#VALconnect">connect</a> [<a href="Qcow.Make.html">Qcow.Make</a>]</td>
+<td><div class="info">
+<code class="code">connect block</code> connects to an existing qcow-formatted image on
+      <code class="code">block</code>.
+</div>
+</td></tr>
+<tr><td><a href="Qcow.Make.html#VALcreate">create</a> [<a href="Qcow.Make.html">Qcow.Make</a>]</td>
+<td><div class="info">
+<code class="code">create block size</code> initialises a qcow-formatted image on <code class="code">block</code>
+      with virtual size <code class="code">size</code>.
+</div>
+</td></tr>
+<tr><td align="left"><br>D</td></tr>
+<tr><td><a href="Qcow_s.LOG.html#VALdebug">debug</a> [<a href="Qcow_s.LOG.html">Qcow_s.LOG</a>]</td>
+<td></td></tr>
+<tr><td align="left"><br>E</td></tr>
+<tr><td><a href="Qcow_s.LOG.html#VALerror">error</a> [<a href="Qcow_s.LOG.html">Qcow_s.LOG</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_error.html#VALerror_msg">error_msg</a> [<a href="Qcow_error.html">Qcow_error</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_header.html#VALextension_of_sexp">extension_of_sexp</a> [<a href="Qcow_header.html">Qcow_header</a>]</td>
+<td></td></tr>
+<tr><td align="left"><br>I</td></tr>
+<tr><td><a href="Qcow_s.LOG.html#VALinfo">info</a> [<a href="Qcow_s.LOG.html">Qcow_s.LOG</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_physical.html#VALis_compressed">is_compressed</a> [<a href="Qcow_physical.html">Qcow_physical</a>]</td>
+<td><div class="info">
+True if the address has been marked as being compressed
+</div>
+</td></tr>
+<tr><td><a href="Qcow_physical.html#VALis_mutable">is_mutable</a> [<a href="Qcow_physical.html">Qcow_physical</a>]</td>
+<td><div class="info">
+True if the offset is safe to mutate directly (i.e.
+</div>
+</td></tr>
+<tr><td align="left"><br>L</td></tr>
+<tr><td><a href="Qcow_header.html#VALl2_tables_required">l2_tables_required</a> [<a href="Qcow_header.html">Qcow_header</a>]</td>
+<td><div class="info">
+Compute the number of L2 tables required for this size of image
+</div>
+</td></tr>
+<tr><td align="left"><br>M</td></tr>
+<tr><td><a href="Qcow_physical.html#VALmake">make</a> [<a href="Qcow_physical.html">Qcow_physical</a>]</td>
+<td><div class="info">
+Create an address at the given byte offset.
+</div>
+</td></tr>
+<tr><td><a href="Qcow_virtual.html#VALmake">make</a> [<a href="Qcow_virtual.html">Qcow_virtual</a>]</td>
+<td><div class="info">
+<code class="code">make cluster_bits byte</code> computes the address within the file
+    of the virtual <code class="code">byte</code> offset
+</div>
+</td></tr>
+<tr><td><a href="Qcow_header.html#VALmax_refcount_table_size">max_refcount_table_size</a> [<a href="Qcow_header.html">Qcow_header</a>]</td>
+<td><div class="info">
+Compute the maximum size of the refcount table
+</div>
+</td></tr>
+<tr><td align="left"><br>R</td></tr>
+<tr><td><a href="Qcow_s.SERIALISABLE.html#VALread">read</a> [<a href="Qcow_s.SERIALISABLE.html">Qcow_s.SERIALISABLE</a>]</td>
+<td><div class="info">
+Read a <code class="code">t</code> from the given buffer and return it, along with the
+      unused remainder of the buffer.
+</div>
+</td></tr>
+<tr><td><a href="Qcow_header.html#VALrefcounts_per_cluster">refcounts_per_cluster</a> [<a href="Qcow_header.html">Qcow_header</a>]</td>
+<td><div class="info">
+The number of 16-bit reference counts per cluster
+</div>
+</td></tr>
+<tr><td><a href="Qcow.Make.html#VALresize">resize</a> [<a href="Qcow.Make.html">Qcow.Make</a>]</td>
+<td><div class="info">
+<code class="code">resize block new_size_sectors</code> changes the size of the qcow-formatted
+      image to be <code class="code">new_size_sectors</code> 512-byte sectors.
+</div>
+</td></tr>
+<tr><td><a href="Qcow_s.RESIZABLE_BLOCK.html#VALresize">resize</a> [<a href="Qcow_s.RESIZABLE_BLOCK.html">Qcow_s.RESIZABLE_BLOCK</a>]</td>
+<td><div class="info">
+Resize the file to the given number of sectors.
+</div>
+</td></tr>
+<tr><td><a href="Qcow_error.html#VALreturn">return</a> [<a href="Qcow_error.html">Qcow_error</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_types.Int64.html#VALround_up">round_up</a> [<a href="Qcow_types.Int64.html">Qcow_types.Int64</a>]</td>
+<td><div class="info">
+<code class="code">round_up value to</code> rounds <code class="code">value</code> to the next multiple of <code class="code">to</code>
+</div>
+</td></tr>
+<tr><td align="left"><br>S</td></tr>
+<tr><td><a href="Qcow.Make.html#VALseek_mapped">seek_mapped</a> [<a href="Qcow.Make.html">Qcow.Make</a>]</td>
+<td><div class="info">
+<code class="code">seek_mapped t start</code> returns the offset of the next region of the
+      device which may have data in it (typically this is the next mapped
+      region)
+</div>
+</td></tr>
+<tr><td><a href="Qcow.Make.html#VALseek_unmapped">seek_unmapped</a> [<a href="Qcow.Make.html">Qcow.Make</a>]</td>
+<td><div class="info">
+<code class="code">seek_unmapped t start</code> returns the offset of the next "hole": a region
+      of the device which is guaranteed to be full of zeroes (typically
+      guaranteed because it is unmapped)
+</div>
+</td></tr>
+<tr><td><a href="Qcow_header.html#VALsexp_of_extension">sexp_of_extension</a> [<a href="Qcow_header.html">Qcow_header</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_physical.html#VALsexp_of_t">sexp_of_t</a> [<a href="Qcow_physical.html">Qcow_physical</a>]</td>
+<td><div class="info">
+A physical address within the backing disk
+</div>
+</td></tr>
+<tr><td><a href="Qcow_virtual.html#VALsexp_of_t">sexp_of_t</a> [<a href="Qcow_virtual.html">Qcow_virtual</a>]</td>
+<td><div class="info">
+A virtual address in a qcow image is broken into 3 levels: an index in the L1 table, pointing to, an index in the L2 table, pointing to, a cluster within which we need an offset
+</div>
+</td></tr>
+<tr><td><a href="Qcow_types.Int64.html#VALsexp_of_t">sexp_of_t</a> [<a href="Qcow_types.Int64.html">Qcow_types.Int64</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_types.Int32.html#VALsexp_of_t">sexp_of_t</a> [<a href="Qcow_types.Int32.html">Qcow_types.Int32</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_types.Int16.html#VALsexp_of_t">sexp_of_t</a> [<a href="Qcow_types.Int16.html">Qcow_types.Int16</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_types.Int8.html#VALsexp_of_t">sexp_of_t</a> [<a href="Qcow_types.Int8.html">Qcow_types.Int8</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_header.CryptMethod.html#VALsexp_of_t">sexp_of_t</a> [<a href="Qcow_header.CryptMethod.html">Qcow_header.CryptMethod</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_header.Version.html#VALsexp_of_t">sexp_of_t</a> [<a href="Qcow_header.Version.html">Qcow_header.Version</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_header.html#VALsexp_of_t">sexp_of_t</a> [<a href="Qcow_header.html">Qcow_header</a>]</td>
+<td><div class="info">
+The qcow2 header
+</div>
+</td></tr>
+<tr><td><a href="Qcow_physical.html#VALshift">shift</a> [<a href="Qcow_physical.html">Qcow_physical</a>]</td>
+<td><div class="info">
+<code class="code">shift t bytes</code> adds <code class="code">bytes</code> to t, maintaining other properties
+</div>
+</td></tr>
+<tr><td><a href="Qcow_s.SERIALISABLE.html#VALsizeof">sizeof</a> [<a href="Qcow_s.SERIALISABLE.html">Qcow_s.SERIALISABLE</a>]</td>
+<td><div class="info">
+The size of a buffer needed to hold <code class="code">t</code>
+</div>
+</td></tr>
+<tr><td align="left"><br>T</td></tr>
+<tr><td><a href="Qcow_physical.html#VALt_of_sexp">t_of_sexp</a> [<a href="Qcow_physical.html">Qcow_physical</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_virtual.html#VALt_of_sexp">t_of_sexp</a> [<a href="Qcow_virtual.html">Qcow_virtual</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_types.Int64.html#VALt_of_sexp">t_of_sexp</a> [<a href="Qcow_types.Int64.html">Qcow_types.Int64</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_types.Int32.html#VALt_of_sexp">t_of_sexp</a> [<a href="Qcow_types.Int32.html">Qcow_types.Int32</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_types.Int16.html#VALt_of_sexp">t_of_sexp</a> [<a href="Qcow_types.Int16.html">Qcow_types.Int16</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_types.Int8.html#VALt_of_sexp">t_of_sexp</a> [<a href="Qcow_types.Int8.html">Qcow_types.Int8</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_header.CryptMethod.html#VALt_of_sexp">t_of_sexp</a> [<a href="Qcow_header.CryptMethod.html">Qcow_header.CryptMethod</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_header.Version.html#VALt_of_sexp">t_of_sexp</a> [<a href="Qcow_header.Version.html">Qcow_header.Version</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_header.html#VALt_of_sexp">t_of_sexp</a> [<a href="Qcow_header.html">Qcow_header</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_physical.html#VALto_bytes">to_bytes</a> [<a href="Qcow_physical.html">Qcow_physical</a>]</td>
+<td><div class="info">
+Return the byte offset on disk
+</div>
+</td></tr>
+<tr><td><a href="Qcow_physical.html#VALto_cluster">to_cluster</a> [<a href="Qcow_physical.html">Qcow_physical</a>]</td>
+<td><div class="info">
+Return the cluster offset on disk, plus a remainder within the cluster
+</div>
+</td></tr>
+<tr><td><a href="Qcow_virtual.html#VALto_offset">to_offset</a> [<a href="Qcow_virtual.html">Qcow_virtual</a>]</td>
+<td></td></tr>
+<tr><td><a href="Qcow_physical.html#VALto_sector">to_sector</a> [<a href="Qcow_physical.html">Qcow_physical</a>]</td>
+<td><div class="info">
+Return the sector on disk, plus a remainder within the sector
+</div>
+</td></tr>
+<tr><td><a href="Qcow_s.PRINTABLE.html#VALto_string">to_string</a> [<a href="Qcow_s.PRINTABLE.html">Qcow_s.PRINTABLE</a>]</td>
+<td><div class="info">
+Produce a pretty human-readable string from a value
+</div>
+</td></tr>
+<tr><td align="left"><br>W</td></tr>
+<tr><td><a href="Qcow_s.SERIALISABLE.html#VALwrite">write</a> [<a href="Qcow_s.SERIALISABLE.html">Qcow_s.SERIALISABLE</a>]</td>
+<td><div class="info">
+Write a <code class="code">t</code> into the given buffer.
+</div>
+</td></tr>
+</table>
+</body>
+</html>

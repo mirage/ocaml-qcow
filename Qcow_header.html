@@ -1,0 +1,234 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Qcow_s.html">
+<link rel="next" href="Qcow_error.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Qcow_s" rel="Chapter" href="Qcow_s.html">
+<link title="Qcow_header" rel="Chapter" href="Qcow_header.html">
+<link title="Qcow_error" rel="Chapter" href="Qcow_error.html">
+<link title="Qcow_types" rel="Chapter" href="Qcow_types.html">
+<link title="Qcow_virtual" rel="Chapter" href="Qcow_virtual.html">
+<link title="Qcow_physical" rel="Chapter" href="Qcow_physical.html">
+<link title="Qcow" rel="Chapter" href="Qcow.html"><title>Qcow_header</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="Qcow_s.html" title="Qcow_s">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="Qcow_error.html" title="Qcow_error">Next</a>
+</div>
+<h1>Module <a href="type_Qcow_header.html">Qcow_header</a></h1>
+
+<pre><span class="keyword">module</span> Qcow_header: <code class="code">sig</code> <a href="Qcow_header.html">..</a> <code class="code">end</code></pre><div class="info module top">
+Offset within the image<br>
+</div>
+<hr width="100%">
+
+<pre><span class="keyword">module</span> <a href="Qcow_header.Version.html">Version</a>: <code class="code">sig</code> <a href="Qcow_header.Version.html">..</a> <code class="code">end</code></pre>
+<pre><span class="keyword">module</span> <a href="Qcow_header.CryptMethod.html">CryptMethod</a>: <code class="code">sig</code> <a href="Qcow_header.CryptMethod.html">..</a> <code class="code">end</code></pre>
+<pre><span id="TYPEoffset"><span class="keyword">type</span> <code class="type"></code>offset</span> = <code class="type">int64</code> </pre>
+<div class="info ">
+Offset within the image<br>
+</div>
+
+
+<pre><code><span id="TYPEextension"><span class="keyword">type</span> <code class="type"></code>extension</span> = {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTextension.incompatible_features">incompatible_features</span>&nbsp;: <code class="type">int64</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTextension.compatible_features">compatible_features</span>&nbsp;: <code class="type">int64</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTextension.autoclear_features">autoclear_features</span>&nbsp;: <code class="type">int64</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTextension.refcount_order">refcount_order</span>&nbsp;: <code class="type">int32</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTextension.header_length">header_length</span>&nbsp;: <code class="type">int32</code>;</code></td>
+
+</tr></table>
+}
+
+
+
+<pre><code><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.version">version</span>&nbsp;: <code class="type"><a href="Qcow_header.Version.html#TYPEt">Version.t</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.backing_file_offset">backing_file_offset</span>&nbsp;: <code class="type"><a href="Qcow_header.html#TYPEoffset">offset</a></code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+offset of the backing file path<br>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.backing_file_size">backing_file_size</span>&nbsp;: <code class="type">int32</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+length of the backing file path<br>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.cluster_bits">cluster_bits</span>&nbsp;: <code class="type">int32</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+a cluster is 2 ** cluster_bits in size<br>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.size">size</span>&nbsp;: <code class="type">int64</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+virtual size of the image<br>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.crypt_method">crypt_method</span>&nbsp;: <code class="type"><a href="Qcow_header.CryptMethod.html#TYPEt">CryptMethod.t</a></code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.l1_size">l1_size</span>&nbsp;: <code class="type">int32</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+number of 8-byte entries in the L1 table<br>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.l1_table_offset">l1_table_offset</span>&nbsp;: <code class="type"><a href="Qcow_header.html#TYPEoffset">offset</a></code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+offset of the L1 table<br>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.refcount_table_offset">refcount_table_offset</span>&nbsp;: <code class="type"><a href="Qcow_header.html#TYPEoffset">offset</a></code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+offset of the refcount table<br>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.refcount_table_clusters">refcount_table_clusters</span>&nbsp;: <code class="type">int32</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+size of the refcount table in clusters<br>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.nb_snapshots">nb_snapshots</span>&nbsp;: <code class="type">int32</code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+the number of internal snapshots<br>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.snapshots_offset">snapshots_offset</span>&nbsp;: <code class="type"><a href="Qcow_header.html#TYPEoffset">offset</a></code>;</code></td>
+<td class="typefieldcomment" align="left" valign="top" ><code>(*</code></td><td class="typefieldcomment" align="left" valign="top" ><div class="info ">
+offset of the snapshot header<br>
+</div>
+</td><td class="typefieldcomment" align="left" valign="bottom" ><code>*)</code></td>
+</tr></table>
+}
+
+<div class="info ">
+The qcow2 header<br>
+</div>
+
+
+<pre><span id="VALrefcounts_per_cluster"><span class="keyword">val</span> refcounts_per_cluster</span> : <code class="type"><a href="Qcow_header.html#TYPEt">t</a> -> int64</code></pre><div class="info ">
+The number of 16-bit reference counts per cluster<br>
+</div>
+
+<pre><span id="VALmax_refcount_table_size"><span class="keyword">val</span> max_refcount_table_size</span> : <code class="type"><a href="Qcow_header.html#TYPEt">t</a> -> int64</code></pre><div class="info ">
+Compute the maximum size of the refcount table<br>
+</div>
+
+<pre><span id="VALl2_tables_required"><span class="keyword">val</span> l2_tables_required</span> : <code class="type">cluster_bits:int -> int64 -> int64</code></pre><div class="info ">
+Compute the number of L2 tables required for this size of image<br>
+</div>
+
+<pre><span class="keyword">include</span> <a href="Qcow_s.SERIALISABLE.html">Qcow_s.SERIALISABLE</a></pre>
+
+<pre><span class="keyword">include</span> <a href="Qcow_s.PRINTABLE.html">Qcow_s.PRINTABLE</a></pre>
+
+<pre><span class="keyword">include</span> Set.OrderedType</pre>
+
+<pre><span id="VALextension_of_sexp"><span class="keyword">val</span> extension_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Qcow_header.html#TYPEextension">extension</a></code></pre>
+<pre><span id="VALsexp_of_extension"><span class="keyword">val</span> sexp_of_extension</span> : <code class="type"><a href="Qcow_header.html#TYPEextension">extension</a> -> Sexplib.Sexp.t</code></pre>
+<pre><span id="VALt_of_sexp"><span class="keyword">val</span> t_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Qcow_header.html#TYPEt">t</a></code></pre>
+<pre><span id="VALsexp_of_t"><span class="keyword">val</span> sexp_of_t</span> : <code class="type"><a href="Qcow_header.html#TYPEt">t</a> -> Sexplib.Sexp.t</code></pre><div class="info ">
+The qcow2 header<br>
+</div>
+<br>
+The number of 16-bit reference counts per cluster<br>
+<br>
+Compute the maximum size of the refcount table<br>
+<br>
+Compute the number of L2 tables required for this size of image<br>
+</body></html>

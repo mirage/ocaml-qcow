@@ -1,0 +1,43 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Qcow_error.html">
+<link rel="next" href="Qcow_virtual.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Qcow_s" rel="Chapter" href="Qcow_s.html">
+<link title="Qcow_header" rel="Chapter" href="Qcow_header.html">
+<link title="Qcow_error" rel="Chapter" href="Qcow_error.html">
+<link title="Qcow_types" rel="Chapter" href="Qcow_types.html">
+<link title="Qcow_virtual" rel="Chapter" href="Qcow_virtual.html">
+<link title="Qcow_physical" rel="Chapter" href="Qcow_physical.html">
+<link title="Qcow" rel="Chapter" href="Qcow.html"><title>Qcow_types</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="Qcow_error.html" title="Qcow_error">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="Qcow_virtual.html" title="Qcow_virtual">Next</a>
+</div>
+<h1>Module <a href="type_Qcow_types.html">Qcow_types</a></h1>
+
+<pre><span class="keyword">module</span> Qcow_types: <code class="code">sig</code> <a href="Qcow_types.html">..</a> <code class="code">end</code></pre><div class="info module top">
+Parsers and printers for types used in qcow2 fields<br>
+</div>
+<hr width="100%">
+
+<pre><span id="VALbig_enough_for"><span class="keyword">val</span> big_enough_for</span> : <code class="type">string -> Cstruct.t -> int -> unit <a href="Qcow_error.html#TYPEt">Qcow_error.t</a></code></pre><div class="info ">
+<code class="code">big_enough_for name buf length</code> returns an error with a log message
+    if buffer <code class="code">buf</code> is smaller than <code class="code">length</code>. The <code class="code">name</code> will be included
+    in the error message.<br>
+</div>
+
+<pre><span class="keyword">module</span> <a href="Qcow_types.Int8.html">Int8</a>: <code class="code">sig</code> <a href="Qcow_types.Int8.html">..</a> <code class="code">end</code></pre>
+<pre><span class="keyword">module</span> <a href="Qcow_types.Int16.html">Int16</a>: <code class="code">sig</code> <a href="Qcow_types.Int16.html">..</a> <code class="code">end</code></pre>
+<pre><span class="keyword">module</span> <a href="Qcow_types.Int32.html">Int32</a>: <code class="code">sig</code> <a href="Qcow_types.Int32.html">..</a> <code class="code">end</code></pre>
+<pre><span class="keyword">module</span> <a href="Qcow_types.Int64.html">Int64</a>: <code class="code">sig</code> <a href="Qcow_types.Int64.html">..</a> <code class="code">end</code></pre></body></html>

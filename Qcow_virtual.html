@@ -1,0 +1,94 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<link rel="stylesheet" href="style.css" type="text/css">
+<meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type">
+<link rel="Start" href="index.html">
+<link rel="previous" href="Qcow_types.html">
+<link rel="next" href="Qcow_physical.html">
+<link rel="Up" href="index.html">
+<link title="Index of types" rel=Appendix href="index_types.html">
+<link title="Index of values" rel=Appendix href="index_values.html">
+<link title="Index of modules" rel=Appendix href="index_modules.html">
+<link title="Index of module types" rel=Appendix href="index_module_types.html">
+<link title="Qcow_s" rel="Chapter" href="Qcow_s.html">
+<link title="Qcow_header" rel="Chapter" href="Qcow_header.html">
+<link title="Qcow_error" rel="Chapter" href="Qcow_error.html">
+<link title="Qcow_types" rel="Chapter" href="Qcow_types.html">
+<link title="Qcow_virtual" rel="Chapter" href="Qcow_virtual.html">
+<link title="Qcow_physical" rel="Chapter" href="Qcow_physical.html">
+<link title="Qcow" rel="Chapter" href="Qcow.html"><title>Qcow_virtual</title>
+</head>
+<body>
+<div class="navbar"><a class="pre" href="Qcow_types.html" title="Qcow_types">Previous</a>
+&nbsp;<a class="up" href="index.html" title="Index">Up</a>
+&nbsp;<a class="post" href="Qcow_physical.html" title="Qcow_physical">Next</a>
+</div>
+<h1>Module <a href="type_Qcow_virtual.html">Qcow_virtual</a></h1>
+
+<pre><span class="keyword">module</span> Qcow_virtual: <code class="code">sig</code> <a href="Qcow_virtual.html">..</a> <code class="code">end</code></pre><div class="info module top">
+A virtual address in a qcow image is broken into 3 levels:<ul>
+<li>an index in the L1 table, pointing to</li>
+<li>an index in the L2 table, pointing to</li>
+<li>a cluster within which we need an offset</li>
+</ul>
+<br>
+</div>
+<hr width="100%">
+
+<pre><code><span id="TYPEt"><span class="keyword">type</span> <code class="type"></code>t</span> = {</code></pre><table class="typetable">
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.l1_index">l1_index</span>&nbsp;: <code class="type">int64</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.l2_index">l2_index</span>&nbsp;: <code class="type">int64</code>;</code></td>
+
+</tr>
+<tr>
+<td align="left" valign="top" >
+<code>&nbsp;&nbsp;</code></td>
+<td align="left" valign="top" >
+<code><span id="TYPEELTt.cluster">cluster</span>&nbsp;: <code class="type">int64</code>;</code></td>
+
+</tr></table>
+}
+
+<div class="info ">
+A virtual address in a qcow image is broken into 3 levels:<ul>
+<li>an index in the L1 table, pointing to</li>
+<li>an index in the L2 table, pointing to</li>
+<li>a cluster within which we need an offset</li>
+</ul>
+<br>
+</div>
+
+
+<pre><span id="VALmake"><span class="keyword">val</span> make</span> : <code class="type">cluster_bits:int -> int64 -> <a href="Qcow_virtual.html#TYPEt">t</a></code></pre><div class="info ">
+<code class="code">make cluster_bits byte</code> computes the address within the file
+    of the virtual <code class="code">byte</code> offset<br>
+</div>
+
+<pre><span id="VALto_offset"><span class="keyword">val</span> to_offset</span> : <code class="type">cluster_bits:int -> <a href="Qcow_virtual.html#TYPEt">t</a> -> int64</code></pre>
+<pre><span id="VALt_of_sexp"><span class="keyword">val</span> t_of_sexp</span> : <code class="type">Sexplib.Sexp.t -> <a href="Qcow_virtual.html#TYPEt">t</a></code></pre>
+<pre><span id="VALsexp_of_t"><span class="keyword">val</span> sexp_of_t</span> : <code class="type"><a href="Qcow_virtual.html#TYPEt">t</a> -> Sexplib.Sexp.t</code></pre><div class="info ">
+A virtual address in a qcow image is broken into 3 levels:<ul>
+<li>an index in the L1 table, pointing to</li>
+<li>an index in the L2 table, pointing to</li>
+<li>a cluster within which we need an offset</li>
+</ul>
+<br>
+</div>
+<br>
+<code class="code">make cluster_bits byte</code> computes the address within the file
+    of the virtual <code class="code">byte</code> offset<br>
+<br>
+<code class="code">to_offset cluster_bits address</code> computes the virtual byte offset
+    of the virtual address<br>
+</body></html>
