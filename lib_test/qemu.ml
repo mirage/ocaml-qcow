@@ -44,7 +44,10 @@ module Img = struct
       if List.mem_assoc name json
       then List.assoc name json
       else failwith (Printf.sprintf "Failed to find '%s' in %s" name (String.concat "\n" lines)) in
-    let virtual_size = Ezjsonm.get_int64 @@ find "virtual-size" json in
+    let int64 x =
+      try Int64.of_string x
+      with _ -> failwith ("Int64.of_string failed on " ^ x) in
+    let virtual_size = int64 @@ Ezjsonm.get_string @@ find "virtual-size" json in
     let filename = Ezjsonm.get_string @@ find "filename" json in
     let cluster_size = Ezjsonm.get_int @@ find "cluster-size" json in
     let format = Ezjsonm.get_string @@ find "format" json in
