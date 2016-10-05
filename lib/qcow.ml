@@ -709,19 +709,21 @@ module Make(B: Qcow_s.RESIZABLE_BLOCK) = struct
     let flush () = B.flush base in
     let cache = ClusterCache.make ~read_cluster ~write_cluster ~flush () in
     let lazy_refcounts = match h.Header.additional with Some { Header.lazy_refcounts = true } -> true | _ -> false in
-    Lwt.return (`Ok { h; base; info = info'; base_info; next_cluster; next_cluster_m; cache; sector_size; cluster_bits; lazy_refcounts })
+    Lwt.return ({ h; base; info = info'; base_info; next_cluster; next_cluster_m; cache; sector_size; cluster_bits; lazy_refcounts })
 
   let connect base =
     let open Lwt in
     B.get_info base
     >>= fun base_info ->
     let sector = Cstruct.sub Io_page.(to_cstruct (get 1)) 0 base_info.B.sector_size in
-    read_base base 0L sector
-    >>= function
-    | `Error x -> Lwt.return (`Error x)
+    read_base base 0L sector >>= function
+    | `Error (`Unknown s) -> Lwt.fail_with s
+    | `Error `Unimplemented -> Lwt.fail_with "unimplemented"
+    | `Error `Is_read_only -> Lwt.fail_with "is read only"
+    | `Error `Disconnected -> Lwt.fail_with "disconnected"
     | `Ok () ->
       match Header.read sector with
-      | Error (`Msg m) -> Lwt.return (`Error (`Unknown m))
+      | Error (`Msg m) -> Lwt.fail_with m
       | Ok (h, _) -> make base h
 
   let resize t new_size_sectors =
@@ -784,7 +786,7 @@ module Make(B: Qcow_s.RESIZABLE_BLOCK) = struct
     resize_base base base_info.B.sector_size (Physical.make next_free_byte)
     >>*= fun () ->
     make base h
-    >>*= fun t ->
+    >>= fun t ->
     update_header t h
     >>*= fun () ->
     (* Write an initial empty refcount table *)
