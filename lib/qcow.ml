@@ -43,7 +43,6 @@ module Make(B: Qcow_s.RESIZABLE_BLOCK) = struct
     size_sectors : int64;
   }
 
-  type id = B.id
   type page_aligned_buffer = B.page_aligned_buffer
 
   let (>>*=) m f =
