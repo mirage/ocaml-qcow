@@ -77,7 +77,7 @@ module type BLOCK = sig
 
   include Qcow_s.RESIZABLE_BLOCK
 
-  val connect: string -> t Lwt.t
+  val connect: string -> [ `Ok of t | `Error of error ] Lwt.t
 end
 
 module UnsafeBlock = struct
@@ -113,17 +113,21 @@ let write filename sector data trace =
   let t =
     let open Lwt in
     BLOCK.connect filename
-    >>= fun x ->
-    B.connect x
-    >>= fun x ->
-    let npages = (String.length data + 4095) / 4096 in
-    let buf = Io_page.(to_cstruct (get npages)) in
-    Cstruct.memset buf 0;
-    Cstruct.blit_from_string data 0 buf 0 (String.length data);
-    B.write x sector [ buf ]
     >>= function
-    | `Error _ -> failwith "write failed"
-    | `Ok () -> return (`Ok ()) in
+    | `Error _ -> failwith (Printf.sprintf "Failed to open %s" filename)
+    | `Ok x ->
+      B.connect x
+      >>= function
+      | `Error _ -> failwith (Printf.sprintf "Failed to read qcow formatted data on %s" filename)
+      | `Ok x ->
+        let npages = (String.length data + 4095) / 4096 in
+        let buf = Io_page.(to_cstruct (get npages)) in
+        Cstruct.memset buf 0;
+        Cstruct.blit_from_string data 0 buf 0 (String.length data);
+        B.write x sector [ buf ]
+        >>= function
+        | `Error _ -> failwith "write failed"
+        | `Ok () -> return (`Ok ()) in
   Lwt_main.run t
 
 let read filename sector length trace =
@@ -136,19 +140,23 @@ let read filename sector length trace =
   let t =
     let open Lwt in
     BLOCK.connect filename
-    >>= fun x ->
-    B.connect x
-    >>= fun x ->
-    let length = Int64.to_int length * 512 in
-    let npages = (length + 4095) / 4096 in
-    let buf = Io_page.(to_cstruct (get npages)) in
-    B.read x sector [ buf ]
     >>= function
-    | `Error _ -> failwith "write failed"
-    | `Ok () ->
-      let result = Cstruct.sub buf 0 length in
-      Printf.printf "%s%!" (Cstruct.to_string result);
-      return (`Ok ()) in
+    | `Error _ -> failwith (Printf.sprintf "Failed to open %s" filename)
+    | `Ok x ->
+      B.connect x
+      >>= function
+      | `Error _ -> failwith (Printf.sprintf "Failed to read qcow formatted data on %s" filename)
+      | `Ok x ->
+        let length = Int64.to_int length * 512 in
+        let npages = (length + 4095) / 4096 in
+        let buf = Io_page.(to_cstruct (get npages)) in
+        B.read x sector [ buf ]
+        >>= function
+        | `Error _ -> failwith "write failed"
+        | `Ok () ->
+          let result = Cstruct.sub buf 0 length in
+          Printf.printf "%s%!" (Cstruct.to_string result);
+          return (`Ok ()) in
   Lwt_main.run t
 
 let check filename =
@@ -156,16 +164,20 @@ let check filename =
   let open Lwt in
   let t =
     Block.connect filename
-    >>= fun x ->
-    B.connect x
-    >>= fun x ->
-    Mirage_block.fold_s ~f:(fun acc ofs buf ->
-        return ()
-      ) () (module B) x
     >>= function
-    | `Error (`Msg m) -> failwith m
-    | `Ok () ->
-      return (`Ok ()) in
+    | `Error _ -> failwith (Printf.sprintf "Failed to open %s" filename)
+    | `Ok x ->
+      B.connect x
+      >>= function
+      | `Error _ -> failwith (Printf.sprintf "Failed to read qcow formatted data on %s" filename)
+      | `Ok x ->
+        Mirage_block.fold_s ~f:(fun acc ofs buf ->
+          return ()
+        ) () (module B) x
+        >>= function
+        | `Error (`Msg m) -> failwith m
+        | `Ok () ->
+          return (`Ok ()) in
   Lwt_main.run t
 
 
@@ -179,9 +191,9 @@ let repair unsafe_buffering filename =
   let open Lwt in
   let t =
     BLOCK.connect filename
-    >>= fun x ->
+    >>*= fun x ->
     B.connect x
-    >>= fun x ->
+    >>*= fun x ->
     B.rebuild_refcount_table x
     >>*= fun () ->
     B.Debug.check_no_overlaps x
@@ -194,24 +206,30 @@ let decode filename output =
   let open Lwt in
   let t =
     Block.connect filename
-    >>= fun x ->
-    B.connect x
-    >>= fun x ->
-    B.get_info x
-    >>= fun info ->
-    let total_size = Int64.(mul info.B.size_sectors (of_int info.B.sector_size)) in
-    Lwt_unix.openfile output [ Lwt_unix.O_WRONLY; Lwt_unix.O_CREAT ] 0o0644
-    >>= fun fd ->
-    Lwt_unix.LargeFile.ftruncate fd total_size
-    >>= fun () ->
-    Lwt_unix.close fd
-    >>= fun () ->
-    Block.connect output
-    >>= fun y ->
-    Mirage_block.sparse_copy (module B) x (module Block) y
     >>= function
-    | `Error _ -> failwith "copy failed"
-    | `Ok () -> return (`Ok ()) in
+    | `Error _ -> failwith (Printf.sprintf "Failed to open %s" filename)
+    | `Ok x ->
+      B.connect x
+      >>= function
+      | `Error _ -> failwith (Printf.sprintf "Failed to read qcow formatted data on %s" filename)
+      | `Ok x ->
+        B.get_info x
+        >>= fun info ->
+        let total_size = Int64.(mul info.B.size_sectors (of_int info.B.sector_size)) in
+        Lwt_unix.openfile output [ Lwt_unix.O_WRONLY; Lwt_unix.O_CREAT ] 0o0644
+        >>= fun fd ->
+        Lwt_unix.LargeFile.ftruncate fd total_size
+        >>= fun () ->
+        Lwt_unix.close fd
+        >>= fun () ->
+        Block.connect output
+        >>= function
+        | `Error _ -> failwith (Printf.sprintf "Failed to open %s" filename)
+        | `Ok y ->
+          Mirage_block.sparse_copy (module B) x (module Block) y
+          >>= function
+          | `Error _ -> failwith "copy failed"
+          | `Ok () -> return (`Ok ()) in
   Lwt_main.run t
 
 let encode filename output =
@@ -219,26 +237,30 @@ let encode filename output =
   let open Lwt in
   let t =
     Block.connect filename
-    >>= fun raw_input ->
-    Block.get_info raw_input
-    >>= fun raw_input_info ->
-    let total_size = Int64.(mul raw_input_info.Block.size_sectors (of_int raw_input_info.Block.sector_size)) in
-    Lwt_unix.openfile output [ Lwt_unix.O_WRONLY; Lwt_unix.O_CREAT ] 0o0644
-    >>= fun fd ->
-    Lwt_unix.close fd
-    >>= fun () ->
-    Block.connect output
-    >>= fun raw_output ->
-    B.create raw_output ~size:total_size ()
     >>= function
-    | `Error _ -> failwith (Printf.sprintf "Failed to create qcow formatted data on %s" output)
-    | `Ok qcow_output ->
-
-      Mirage_block.sparse_copy (module Block) raw_input (module B) qcow_output
+    | `Error _ -> failwith (Printf.sprintf "Failed to open %s" filename)
+    | `Ok raw_input ->
+      Block.get_info raw_input
+      >>= fun raw_input_info ->
+      let total_size = Int64.(mul raw_input_info.Block.size_sectors (of_int raw_input_info.Block.sector_size)) in
+      Lwt_unix.openfile output [ Lwt_unix.O_WRONLY; Lwt_unix.O_CREAT ] 0o0644
+      >>= fun fd ->
+      Lwt_unix.close fd
+      >>= fun () ->
+      Block.connect output
       >>= function
-      | `Error (`Msg m) -> failwith m
-      | `Error _ -> failwith "copy failed"
-      | `Ok () -> return (`Ok ()) in
+      | `Error _ -> failwith (Printf.sprintf "Failed to open %s" output)
+      | `Ok raw_output ->
+        B.create raw_output ~size:total_size ()
+        >>= function
+        | `Error _ -> failwith (Printf.sprintf "Failed to create qcow formatted data on %s" output)
+        | `Ok qcow_output ->
+
+          Mirage_block.sparse_copy (module Block) raw_input (module B) qcow_output
+          >>= function
+          | `Error (`Msg m) -> failwith m
+          | `Error _ -> failwith "copy failed"
+          | `Ok () -> return (`Ok ()) in
   Lwt_main.run t
 
 let create size strict_refcounts trace filename =
@@ -255,11 +277,13 @@ let create size strict_refcounts trace filename =
     Lwt_unix.close fd
     >>= fun () ->
     BLOCK.connect filename
-    >>= fun x ->
-    B.create x ~size ~lazy_refcounts:(not strict_refcounts) ()
     >>= function
-    | `Error _ -> failwith (Printf.sprintf "Failed to create qcow formatted data on %s" filename)
-    | `Ok x -> return (`Ok ()) in
+    | `Error _ -> failwith (Printf.sprintf "Failed to open %s" filename)
+    | `Ok x ->
+      B.create x ~size ~lazy_refcounts:(not strict_refcounts) ()
+      >>= function
+      | `Error _ -> failwith (Printf.sprintf "Failed to create qcow formatted data on %s" filename)
+      | `Ok x -> return (`Ok ()) in
   Lwt_main.run t
 
 type output = [
@@ -277,9 +301,9 @@ let mapped filename format ignore_zeroes =
   let open Lwt in
   let t =
     Block.connect filename
-    >>= fun x ->
+    >>*= fun x ->
     B.connect x
-    >>= fun x ->
+    >>*= fun x ->
     B.get_info x
     >>= fun info ->
     Printf.printf "# offset (bytes), length (bytes)\n";

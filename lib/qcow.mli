@@ -27,7 +27,7 @@ module Make(B: Qcow_s.RESIZABLE_BLOCK) : sig
       will use lazy refcounts, but this can be overriden by supplying
       [~lazy_refcounts:false] *)
 
-  val connect: B.t -> t io
+  val connect: B.t -> [ `Ok of t | `Error of error ] io
   (** [connect block] connects to an existing qcow-formatted image on
       [block]. *)
 
