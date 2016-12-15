@@ -49,12 +49,12 @@ module Make(B: Qcow_s.RESIZABLE_BLOCK)(Time: V1_LWT.TIME) = struct
       compact_after_unmaps: int64 option;
       compact_ms: int;
     }
-    let create ?(discard=false) ?compact_after_unmaps ?(compact_ms=1000) () =
+    let create ?(discard=false) ?compact_after_unmaps ?(compact_ms=10000) () =
       { discard; compact_after_unmaps; compact_ms }
     let to_string t = Printf.sprintf "discard=%b;compact_after_unmaps=%s;compact_ms=%d"
       t.discard (match t.compact_after_unmaps with None -> "0" | Some x -> Int64.to_string x)
       t.compact_ms
-    let default = { discard = false; compact_after_unmaps = None; compact_ms = 1000 }
+    let default = { discard = false; compact_after_unmaps = None; compact_ms = 10000 }
     let of_string txt =
       let open Astring in
       try
