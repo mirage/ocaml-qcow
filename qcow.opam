@@ -11,8 +11,8 @@ tags: [
 ]
 
 build: [
-  ["jbuilder" "subst"] {pinned}
-  ["jbuilder" "build" "-p" name "-j" jobs]
+  ["dune" "subst"] {pinned}
+  ["dune" "build" "-p" name "-j" jobs]
 ]
 
 depends: [
@@ -31,7 +31,7 @@ depends: [
   "logs"
   "fmt" {>="0.8.2"}
   "io-page-unix" {>= "2.0.0"}
-  "jbuilder" {build & >="1.0+beta10"}
+  "dune" {build & >= "1.0"}
   "ppx_tools" {build}
   "ppx_sexp_conv" {build}
   "ppx_type_conv" {build}
