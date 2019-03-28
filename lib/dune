@@ -9,7 +9,5 @@
 
 (rule
  (targets qcow_word_size.ml)
- (deps
-  (:< ../generator/gen.exe))
  (action
-  (run %{<} -o %{targets})))
+  (run ../generator/gen.exe -o %{targets})))
