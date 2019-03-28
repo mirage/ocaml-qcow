@@ -1,12 +1,8 @@
-(executables
- (names main)
+(executable
+ (name main)
+ (public_name qcow-tool)
+ (package qcow-tool)
  (libraries qcow io-page.unix logs logs.fmt sha unix-type-representations
    cmdliner)
  (preprocess
   (pps ppx_sexp_conv)))
-
-(install
- (section bin)
- (package qcow-tool)
- (files
-  (main.exe as qcow-tool)))

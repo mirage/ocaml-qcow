@@ -1,3 +1,2 @@
-(executables
- (names gen)
- (preprocess no_preprocessing))
+(executable
+ (name gen))
