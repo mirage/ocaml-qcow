@@ -1,7 +1,7 @@
 (library
  (name qcow)
  (public_name qcow)
- (libraries astring cstruct logs lwt mirage-block mirage-block-unix
+ (libraries astring cstruct diet logs lwt mirage-block mirage-block-unix
    prometheus io-page sexplib stdlib-shims mirage-sleep)
  (wrapped false)
  (preprocess
