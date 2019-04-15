@@ -34,8 +34,20 @@ val round_up : int64 -> int64 -> int64
 val round_down : int64 -> int64 -> int64
 (** [round_down value to] rounds [value] down to the multiple of [to] *)
 
-module IntervalSet : Qcow_s.INTERVAL_SET with type elt = t
+module IntervalSet : sig 
+ include Diet.INTERVAL_SET with type elt = t
+
+ val t_of_sexp : Sexplib0.Sexp.t -> t
+
+ val sexp_of_t : t -> Sexplib0.Sexp.t
+end
 
 module Map : Map.S with type key = t
+
+val diet_fold_s :
+  (IntervalSet.interval -> 'a -> 'a Lwt.t) ->
+  IntervalSet.t ->
+  'a ->
+  'a Lwt.t
 
 include Qcow_s.SERIALISABLE with type t := t

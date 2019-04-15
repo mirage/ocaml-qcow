@@ -55,7 +55,7 @@ let random_write_discard_compact nr_clusters stop_after =
     let nr_sectors = Int64.(div size (of_int info.Mirage_block.sector_size)) in
 
     (* add to this set on write, remove on discard *)
-    let module SectorSet = Qcow_diet.Make(Qcow_types.Int64) in
+    let module SectorSet = Qcow_int64.IntervalSet in
     let written = ref SectorSet.empty in
     let i = SectorSet.Interval.make 0L (Int64.pred info.Mirage_block.size_sectors) in
     let empty = ref SectorSet.(add i empty) in
@@ -208,15 +208,15 @@ let random_write_discard_compact nr_clusters stop_after =
       (fun e ->
         Printf.fprintf stderr "Test failed on iteration # %d\n%!" !nr_iterations;
         Printexc.print_backtrace stderr;
-        let s = Sexplib.Sexp.to_string_hum (SectorSet.sexp_of_t !written) in
-        Lwt_io.open_file ~flags:[Unix.O_CREAT; Unix.O_TRUNC; Unix.O_WRONLY ] ~perm:0o644 ~mode:Lwt_io.output "/tmp/written.sexp"
+        let s = Fmt.to_to_string SectorSet.pp !written in
+        Lwt_io.open_file ~flags:[Unix.O_CREAT; Unix.O_TRUNC; Unix.O_WRONLY ] ~perm:0o644 ~mode:Lwt_io.output "/tmp/written"
         >>= fun oc ->
         Lwt_io.write oc s
         >>= fun () ->
         Lwt_io.close oc
         >>= fun () ->
-        let s = Sexplib.Sexp.to_string_hum (SectorSet.sexp_of_t !empty) in
-        Lwt_io.open_file ~flags:[Unix.O_CREAT; Unix.O_TRUNC; Unix.O_WRONLY ] ~perm:0o644 ~mode:Lwt_io.output "/tmp/empty.sexp"
+        let s = Fmt.to_to_string SectorSet.pp !empty in
+        Lwt_io.open_file ~flags:[Unix.O_CREAT; Unix.O_TRUNC; Unix.O_WRONLY ] ~perm:0o644 ~mode:Lwt_io.output "/tmp/empty"
         >>= fun oc ->
         Lwt_io.write oc s
         >>= fun () ->

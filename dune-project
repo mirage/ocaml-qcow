@@ -20,6 +20,7 @@
     (ocaml (>= 4.12.0))
     astring
     (cstruct (>= 6.1.0))
+    (diet (>= 0.3.0))
     logs
     lwt
     (mirage-block (>= 3.0.0))

@@ -11,6 +11,7 @@
   (libraries
     astring
     (re_export cstruct)
+    (re_export diet)
     (re_export logs)
     (re_export lwt)
     (re_export mirage-block)
