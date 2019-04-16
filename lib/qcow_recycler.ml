@@ -83,12 +83,14 @@ module Make(B: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
     >>= function
     | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
     | Error `Disconnected -> Lwt.return (Error `Disconnected)
+    | Error e -> Format.kasprintf Lwt.fail_with "Unknown error: %a" B.pp_error e
     | Ok () ->
       B.write t.base dst_sector [ cluster ]
       >>= function
       | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
       | Error `Disconnected -> Lwt.return (Error `Disconnected)
       | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
+      | Error e -> Format.kasprintf Lwt.fail_with "Unknown error: %a" B.pp_write_error e
       | Ok () ->
         let dst' = Cluster.of_int64 dst in
         Cache.Debug.assert_not_cached t.cache dst';
@@ -135,6 +137,7 @@ module Make(B: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
                | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
                | Error `Disconnected -> Lwt.return (Error `Disconnected)
                | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
+               | Error e -> Format.kasprintf Lwt.fail_with "Unknown error: %a" B.pp_write_error e
                | Ok () ->
                  Qcow_cluster_map.(set_move_state cluster_map move Copied);
                  Lwt.return (Ok ())
@@ -150,9 +153,7 @@ module Make(B: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
         let open Lwt.Infix in
         move t m
         >>= function
-        | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-        | Error `Disconnected -> Lwt.return (Error `Disconnected)
-        | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
+        | Error e -> Lwt.return_error e
         | Ok () ->
           progress_cb ~percent:((100 * i) / total);
           loop (i + 1) ms in
@@ -358,9 +359,7 @@ module Make(B: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
         let moves = Qcow_cluster_map.moves cluster_map in
         B.flush t.base
         >>= function
-        | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-        | Error `Disconnected -> Lwt.return (Error `Disconnected)
-        | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
+        | Error e -> Lwt.return (Error e)
         | Ok () ->
           (* Walk over the snapshot of moves before the flush and update. This
              ensures we don't accidentally advance the state of moves which appeared
@@ -520,9 +519,7 @@ module Make(B: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
             (fun () ->
               erase t to_erase
               >>= function
-              | Error `Unimplemented -> Lwt.fail_with "Unimplemented"
-              | Error `Disconnected -> Lwt.fail_with "Disconnected"
-              | Error `Is_read_only -> Lwt.fail_with "Is_read_only"
+              | Error e -> Format.kasprintf Lwt.fail_with "%a" B.pp_write_error e
               | Ok () ->
                 Qcow_cluster_map.(set_cluster_state cluster_map to_erase Roots Erased);
                 Lwt.return_unit

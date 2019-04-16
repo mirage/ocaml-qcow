@@ -10,8 +10,8 @@ tags: [
 ]
 
 build: [
-  ["jbuilder" "subst"] {pinned}
-  ["jbuilder" "build" "-p" name "-j" jobs]
+  ["dune" "subst"] {pinned}
+  ["dune" "build" "-p" name "-j" jobs]
 ]
 
 depends: [
@@ -34,7 +34,7 @@ depends: [
   "astring"
   "io-page"
   "ocamlfind" {build}
-  "jbuilder" {build}
+  "dune" {build & >= "1.0"}
   "ounit" {test}
   "mirage-block-ramdisk" {test}
   "ezjsonm" {test}

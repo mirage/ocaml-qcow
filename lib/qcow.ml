@@ -166,6 +166,18 @@ module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
     let within = Physical.within_cluster ~cluster_bits:t.cluster_bits offset in
     Lwt.return (Ok (Metadata.Physical.get addresses within, lock))
 
+  let adapt_error : B.error -> error = function
+    | #Mirage_block.error as e -> e
+    | _ -> `Msg "Unknown error"
+
+  let adapt_write_error : B.write_error -> write_error = function
+    | #Mirage_block.write_error as e -> e
+    | _ -> `Msg "Unknown error"
+
+  let adapt_write_error_result = function
+    | Error e -> Lwt.return_error (adapt_write_error e)
+    | Ok x -> Lwt.return_ok x
+
   let update_header t h =
     let cluster = malloc t.h in
     match Header.write h cluster with
@@ -173,15 +185,11 @@ module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
       let open Lwt.Infix in
         B.write t.base 0L [ cluster ]
         >>= function
-        | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-        | Error `Disconnected -> Lwt.return (Error `Disconnected)
-        | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
+        | Error e -> Lwt.return_error (adapt_write_error e)
         | Ok () ->
         Recycler.flush t.recycler
         >>= function
-        | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-        | Error `Disconnected -> Lwt.return (Error `Disconnected)
-        | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
+        | Error e -> Lwt.return_error (adapt_write_error e)
         | Ok () ->
         Log.debug (fun f -> f "Written header");
         t.h <- h;
@@ -205,9 +213,7 @@ module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
       end;
       B.resize base sector
       >>= function
-      | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-      | Error `Disconnected -> Lwt.return (Error `Disconnected)
-      | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
+      | Error e -> Lwt.return_error (adapt_write_error e)
       | Ok () ->
       Log.debug (fun f -> f "Resized device to %d bytes" (Qcow_physical.to_bytes new_size));
       Lwt.return (Ok ())
@@ -313,11 +319,7 @@ module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
                              >>= fun () ->
                              let open Lwt.Infix in
                              Recycler.flush t.recycler
-                             >>= function
-                             | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-                             | Error `Disconnected -> Lwt.return (Error `Disconnected)
-                             | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
-                             | Ok () -> Lwt.return (Ok ())
+                             >>= adapt_write_error_result
                           end else Lwt.return (Ok ())
                       )
                       >>= fun () ->
@@ -440,9 +442,7 @@ module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
                       let open Lwt.Infix in
                       Recycler.copy t.recycler src dst
                       >>= function
-                      | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-                      | Error `Disconnected -> Lwt.return (Error `Disconnected)
-                      | Error `Is_read_only -> Lwt.return (Error (`Msg "Device is read only"))
+                      | Error e -> Lwt.return_error (adapt_write_error e)
                       | Ok () ->
                       let free = Cluster.IntervalSet.(remove (Interval.make first first) free) in
                       loop free (i + 1)
@@ -462,9 +462,7 @@ module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
                       let open Lwt.Infix in
                       B.write t.base sector [ buf ]
                       >>= function
-                      | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-                      | Error `Disconnected -> Lwt.return (Error `Disconnected)
-                      | Error `Is_read_only -> Lwt.return (Error (`Msg "Device is read only"))
+                      | Error e -> Lwt.return_error (adapt_write_error e)
                       | Ok () ->
                       let free = Cluster.IntervalSet.(remove (Interval.make first first) free) in
                       loop free (Int64.succ i)
@@ -521,17 +519,13 @@ module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
                       let open Lwt.Infix in
                       B.write t.base sector [ buf ]
                       >>= function
-                      | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-                      | Error `Disconnected -> Lwt.return (Error `Disconnected)
-                      | Error `Is_read_only -> Lwt.return (Error (`Msg "Device is read only"))
+                      | Error e -> Lwt.return_error (adapt_write_error e)
                       | Ok () ->
                       (* Ensure the new zeroed cluster has been persisted before we reference
                          it via `marshal_physical_address` *)
                       Recycler.flush t.recycler
                       >>= function
-                      | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-                      | Error `Disconnected -> Lwt.return (Error `Disconnected)
-                      | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
+                      | Error e -> Lwt.return_error (adapt_write_error e)
                       | Ok () ->
                       Log.debug (fun f -> f "Allocated new refcount cluster %s" (Cluster.to_string cluster));
                       let open Lwt_write_error.Infix in
@@ -540,9 +534,7 @@ module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
                       let open Lwt.Infix in
                       Recycler.flush t.recycler
                       >>= function
-                      | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-                      | Error `Disconnected -> Lwt.return (Error `Disconnected)
-                      | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
+                      | Error e -> Lwt.return_error (adapt_write_error e)
                       | Ok () ->
                       let open Lwt_write_error.Infix in
                       really_incr ?client t cluster
@@ -572,9 +564,7 @@ module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
         let open Lwt.Infix in
         Recycler.flush t.recycler
         >>= function
-        | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-        | Error `Disconnected -> Lwt.return (Error `Disconnected)
-        | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
+        | Error e -> Lwt.return_error (adapt_write_error e)
         | Ok () ->
         Log.debug (fun f -> f "Incremented refcount of cluster %Ld" cluster);
         Lwt.return (Ok ())
@@ -1096,9 +1086,7 @@ module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
                   let open Lwt.Infix in
                   Recycler.flush t.recycler
                   >>= function
-                  | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-                  | Error `Disconnected -> Lwt.return (Error `Disconnected)
-                  | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
+                  | Error e -> Lwt.return_error (adapt_write_error e)
                   | Ok () ->
                   let open Lwt_write_error.Infix in
 
@@ -1109,9 +1097,7 @@ module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
                   let open Lwt.Infix in
                   Recycler.flush t.recycler
                   >>= function
-                  | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-                  | Error `Disconnected -> Lwt.return (Error `Disconnected)
-                  | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
+                  | Error e -> Lwt.return_error (adapt_write_error e)
                   | Ok () -> Lwt.return (Ok refs_updated) in
                 one_pass ~progress_cb:(fun ~percent -> progress_cb ~percent:((percent * 80) / 100)) ()
                 >>= fun refs_updated ->
@@ -1235,8 +1221,7 @@ module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
                     )
                 )
               >>= function
-              | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-              | Error `Disconnected -> Lwt.return (Error `Disconnected)
+              | Error e -> Lwt.return_error (adapt_error e)
               | Ok () -> Lwt.return (Ok ())
             ) (fun () ->
               List.iter Locks.unlock work.metadata_locks;
@@ -1319,9 +1304,7 @@ module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
                     (fun () ->
                       B.write t.base work.sector work.bufs
                       >>= function
-                      | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-                      | Error `Disconnected -> Lwt.return (Error `Disconnected)
-                      | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
+                      | Error e -> Lwt.return_error (adapt_write_error e)
                       | Ok () -> Lwt.return (Ok ())
                     ) (fun e ->
                       Log.err (fun f -> f "%s: low-level I/O exception %s" (describe_fn ()) (Printexc.to_string e));
@@ -1453,8 +1436,8 @@ module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
         (fun () ->
           B.read base sector [ buf ]
           >>= function
-          | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-          | Error `Disconnected -> Lwt.return (Error `Disconnected)
+          | Error (#Mirage_device.error as e) -> Lwt.return_error e
+          | Error _ -> Lwt.fail_with "unknown error"
           | Ok () -> Lwt.return (Ok buf)
         ) (fun e ->
           Log.err (fun f -> f "read_cluster %Ld: low-level I/O exception %s" cluster (Printexc.to_string e));
@@ -1475,6 +1458,7 @@ module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
             | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
             | Error `Disconnected -> Lwt.return (Error `Disconnected)
             | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
+            | Error _ -> Lwt.fail_with "unknown error"
             | Ok () -> Lwt.return (Ok ())
           ) (fun e ->
             Log.err (fun f -> f "write_cluster %Ld: low-level I/O exception %s" cluster (Printexc.to_string e));
@@ -1570,8 +1554,7 @@ module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
     let sector = Cstruct.sub Io_page.(to_cstruct (get 1)) 0 base_info.Mirage_block.sector_size in
     B.read base 0L [ sector ]
     >>= function
-    | Error `Unimplemented -> Lwt.fail_with "Unimplemented"
-    | Error `Disconnected -> Lwt.fail_with "Disconnected"
+    | Error e -> Format.kasprintf Lwt.fail_with "%a" B.pp_error e
     | Ok () ->
       match Header.read sector with
       | Error (`Msg m) -> Lwt.fail_with m
@@ -1649,11 +1632,7 @@ module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
               t.stats.Stats.nr_erased <- Int64.succ t.stats.Stats.nr_erased;
               let open Lwt.Infix in
               B.write t.base base_sector [ Cstruct.sub zero 0 t.info.Mirage_block.sector_size ]
-              >>= function
-              | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-              | Error `Disconnected -> Lwt.return (Error `Disconnected)
-              | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
-              | Ok () -> Lwt.return (Ok ())
+              >>= adapt_write_error_result
             ) (fun () ->
               Locks.unlock l1_lock;
               Locks.unlock l2_lock;
@@ -1756,9 +1735,7 @@ module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
     let open Lwt.Infix in
     B.write base (Physical.sector ~sector_size:t.sector_size refcount_table_offset) [ cluster ]
     >>= function
-    | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-    | Error `Disconnected -> Lwt.return (Error `Disconnected)
-    | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
+    | Error e -> Lwt.return_error (adapt_write_error e)
     | Ok () ->
     let open Lwt_write_error.Infix in
     let next_cluster = next_free_byte / cluster_size in
@@ -1776,15 +1753,11 @@ module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
     let open Lwt.Infix in
     B.write base (Physical.sector ~sector_size:t.sector_size l1_table_offset) [ cluster ]
     >>= function
-    | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-    | Error `Disconnected -> Lwt.return (Error `Disconnected)
-    | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
+    | Error e -> Lwt.return_error (adapt_write_error e)
     | Ok () ->
     Recycler.flush t.recycler
     >>= function
-    | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-    | Error `Disconnected -> Lwt.return (Error `Disconnected)
-    | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
+    | Error e -> Lwt.return_error (adapt_write_error e)
     | Ok () ->
     Lwt.return (Ok t)
 
@@ -1912,11 +1885,7 @@ module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
   let flush t =
     let open Lwt.Infix in
     Recycler.flush t.recycler
-    >>= function
-    | Error `Disconnected -> Lwt.return (Error `Disconnected)
-    | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
-    | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-    | Ok () -> Lwt.return (Ok ())
+    >>= adapt_write_error_result
 
   let header t = t.h
 

@@ -257,6 +257,13 @@ let is_zero buffer =
     true
   with Non_zero -> false
 
+let handle_error pp_error =
+  function
+  | Error e ->
+    let msg = Format.asprintf "%a" pp_error e in
+    Lwt.return (`Error (false, msg))
+  | Ok x -> Lwt.return (`Ok x)
+
 let discard unsafe_buffering filename =
   let block =
      if unsafe_buffering
@@ -311,11 +318,7 @@ let discard unsafe_buffering filename =
       ) None x
     >>*= fun _ ->
     return (Ok ()) in
-  Lwt_main.run (t >>= function
-    | Error `Disconnected -> Lwt.return (`Error(false, "Disconnected"))
-    | Error `Unimplemented -> Lwt.return (`Error(false, "Unimplemented"))
-    | Ok x -> Lwt.return (`Ok x)
-  )
+  Lwt_main.run (t >>= handle_error B.pp_error)
 
 let compact common_options_t unsafe_buffering filename =
   handle_common common_options_t;
@@ -365,17 +368,8 @@ let compact common_options_t unsafe_buffering filename =
       Printf.printf "The file is now %Ld MiB smaller.\n" smaller_mib
     end;
     B.Debug.check_no_overlaps x
-    >>= function
-    | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
-    | Error `Disconnected -> Lwt.return (Error `Disconnected)
-    | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-    | Ok () -> Lwt.return (Ok ()) in
-  Lwt_main.run (t >>= function
-    | Error `Disconnected -> Lwt.return (`Error(false, "Disconnected"))
-    | Error `Unimplemented -> Lwt.return (`Error(false, "Unimplemented"))
-    | Error `Is_read_only -> Lwt.return (`Error(false, "Is_read_only"))
-    | Ok x -> Lwt.return (`Ok x)
-  )
+  in
+  Lwt_main.run (t >>= handle_error B.pp_write_error)
 
 let repair unsafe_buffering filename =
   let block =
@@ -393,17 +387,8 @@ let repair unsafe_buffering filename =
     B.rebuild_refcount_table x
     >>*= fun () ->
     B.Debug.check_no_overlaps x
-    >>= function
-    | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
-    | Error `Disconnected -> Lwt.return (Error `Disconnected)
-    | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-    | Ok () -> Lwt.return (Ok ()) in
-  Lwt_main.run (t >>= function
-    | Error `Disconnected -> Lwt.return (`Error(false, "Disconnected"))
-    | Error `Unimplemented -> Lwt.return (`Error(false, "Unimplemented"))
-    | Error `Is_read_only -> Lwt.return (`Error(false, "Is_read_only"))
-    | Ok x -> Lwt.return (`Ok x)
-  )
+  in
+  Lwt_main.run (t >>= handle_error B.pp_write_error)
 
 let sha _common_options_t filename =
   let module B = Qcow.Make(ReadOnlyBlock)(Time) in
@@ -680,11 +665,7 @@ let mapped filename _format ignore_zeroes =
     ) () x
     >>*= fun () ->
     return (Ok ()) in
-  Lwt_main.run (t >>= function
-    | Error `Disconnected -> Lwt.return (`Error(false, "Disconnected"))
-    | Error `Unimplemented -> Lwt.return (`Error(false, "Unimplemented"))
-    | Ok x -> Lwt.return (`Ok x)
-  )
+  Lwt_main.run (t >>= handle_error B.pp_error)
 
 let finally f g =
   try
@@ -726,7 +707,7 @@ let dehydrate _common input_filename output_filename =
     Lwt_unix.openfile (output_filename ^ ".meta") [ Unix.O_EXCL; Unix.O_CREAT; Unix.O_WRONLY ] 0o0644
     >>= fun output_fd ->
     (* Append the metadata intervals from the `input_fd` to `metadata_fd` *)
-    Qcow.Int64.IntervalSet.fold_s
+    Qcow.Int64.diet_fold_s
       (fun i () ->
         let x, y = Qcow.Int64.(IntervalSet.Interval.(x i, y i)) in
         let rec loop x =
@@ -771,7 +752,7 @@ let rehydrate _common input_filename output_filename =
     Lwt_unix.write output_fd (Bytes.of_string "\000") 0 1
     >>= fun _ ->
     (* Append the metadata intervals from the `input_fd` to `metadata_fd` *)
-    Qcow.Int64.IntervalSet.fold_s
+    Qcow.Int64.diet_fold_s
       (fun i () ->
         let x, y = Qcow.Int64.(IntervalSet.Interval.(x i, y i)) in
         let rec loop x =

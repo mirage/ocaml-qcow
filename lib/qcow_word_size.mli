@@ -25,6 +25,6 @@ module Cluster: sig
   val round_up: t -> t -> t
   (** [round_up value to] rounds [value] to the next multiple of [to] *)
 
-  module IntervalSet: Qcow_s.INTERVAL_SET with type elt = t
+  module IntervalSet: Diet.INTERVAL_SET with type elt = t
   module Map: Map.S with type key = t
 end

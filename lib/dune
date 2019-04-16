@@ -1,0 +1,13 @@
+(library
+ (name qcow)
+ (public_name qcow)
+ (libraries astring cstruct diet logs lwt mirage-block mirage-block-unix
+   mirage-types-lwt prometheus io-page-unix)
+ (wrapped false)
+ (preprocess
+  (pps ppx_sexp_conv)))
+
+(rule
+ (targets qcow_word_size.ml)
+ (action
+  (run ../generator/gen.exe -o %{targets})))

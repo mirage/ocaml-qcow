@@ -20,6 +20,11 @@ module Cstructs = Qcow_cstructs
 module Make(B: Qcow_s.RESIZABLE_BLOCK) = struct
   include B
 
+  let handle_error = function
+    | `Unimplemented -> Lwt.return (Error `Unimplemented)
+    | `Disconnected -> Lwt.return (Error `Disconnected)
+    | e -> Format.kasprintf Lwt.fail_with "Unknown error: %a" B.pp_error e
+
   let read base base_sector buf =
     let open Lwt in
     B.get_info base
@@ -37,16 +42,14 @@ module Make(B: Qcow_s.RESIZABLE_BLOCK) = struct
         then B.read base base_sector (Cstructs.sub buf 0 bytes)
         else Lwt.return (Ok ()) )
       >>= function
-      | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-      | Error `Disconnected -> Lwt.return (Error `Disconnected)
+      | Error e -> handle_error e
       | Ok () ->
         Cstructs.(memset (shift buf (max 0 bytes)) 0);
         Lwt.return (Ok ())
     end else begin
       B.read base base_sector buf
       >>= function
-      | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-      | Error `Disconnected -> Lwt.return (Error `Disconnected)
+      | Error e -> handle_error e
       | Ok () -> Lwt.return (Ok ())
     end
 end

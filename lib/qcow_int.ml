@@ -36,7 +36,7 @@ module M = struct
   let logor x y = x lor y
   let rem x y = x mod y
 end
-module IntervalSet = Qcow_diet.Make(M)
+module IntervalSet = Diet.Make(M)
 module Map = Map.Make(M)
 include M
 

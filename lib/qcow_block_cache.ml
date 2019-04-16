@@ -96,7 +96,7 @@ module Make(B: Qcow_s.RESIZABLE_BLOCK) = struct
         assert (Int64.IntervalSet.(is_empty @@ inter t.in_cache t.zeros));
         (* coalesce known-zeros together with data blocks *)
         let all = Int64.IntervalSet.union t.in_cache t.zeros in
-        Int64.IntervalSet.fold_s
+        Int64.diet_fold_s
           (fun i err -> match err with
             | Error e -> Lwt.return (Error e)
             | Ok () ->
