@@ -18,7 +18,7 @@ module Locks = Qcow_locks
 module Metadata = Qcow_metadata
 module Physical = Qcow_physical
 
-module Make(B: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
+module Make(B: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time.S) = struct
 
   type t = {
     base: B.t;

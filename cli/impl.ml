@@ -279,7 +279,7 @@ let discard unsafe_buffering filename =
     >>= fun info ->
     B.connect x
     >>= fun x ->
-    let module F = Mirage_block_lwt.Fast_fold(B) in
+    let module F = Mirage_block_combinators.Fast_fold(B) in
     F.mapped_s
       ~f:(fun acc sector buffer ->
         if is_zero buffer then begin
@@ -452,7 +452,7 @@ let decode filename output =
     >>= fun () ->
     Block.connect output
     >>= fun y ->
-    let module C = Mirage_block_lwt.Copy(B)(Block) in
+    let module C = Mirage_block_combinators.Copy(B)(Block) in
     C.v ~src:x ~dst:y
     >>= function
     | Error _ -> failwith "copy failed"
@@ -478,7 +478,7 @@ let encode filename output =
     >>= function
     | Error _ -> failwith (Printf.sprintf "Failed to create qcow formatted data on %s" output)
     | Ok qcow_output ->
-      let module C = Mirage_block_lwt.Copy(Block)(B) in
+      let module C = Mirage_block_combinators.Copy(Block)(B) in
       C.v ~src:raw_input ~dst:qcow_output
       >>= function
       | Error _ -> failwith "copy failed"
@@ -656,7 +656,7 @@ let mapped filename _format ignore_zeroes =
     B.get_info x
     >>= fun info ->
     Printf.printf "# offset (bytes), length (bytes)\n";
-    let module F = Mirage_block_lwt.Fast_fold(B) in
+    let module F = Mirage_block_combinators.Fast_fold(B) in
     F.mapped_s ~f:(fun () sector_ofs data ->
       let sector_bytes = Int64.(mul sector_ofs (of_int info.Mirage_block.sector_size)) in
       if not ignore_zeroes || not(is_zero data)

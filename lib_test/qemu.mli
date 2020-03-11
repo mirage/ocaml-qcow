@@ -14,19 +14,8 @@
  * PERFORMANCE OF THIS SOFTWARE.
  *)
 
-(** Wrappers for qemu-img, qemu-nbd to allow us to compare the contents of
+(** Wrappers for qemu-img to allow us to compare the contents of
    ocaml-qcow images and qemu-produced images. *)
-
-module Block : sig
-  include Mirage_block_lwt.S
-
-  val connect: string -> t Lwt.t
-  (** [connect path] connects to a BLOCK device exported by qemu-nbd *)
-
-  val create: string -> int64 -> t Lwt.t
-  (** [create path size] creates an image using qemu-img and then connects
-      to it via qemu-nbd *)
-end
 
 module Img: sig
 

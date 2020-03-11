@@ -46,7 +46,7 @@ module Version = struct
     | 3l -> return (`Three, rest)
     | _ -> error_msg "Unknown version: %ld" version
 
-  let compare (a: t) (b: t) = compare a b
+  let compare (a: t) (b: t) = Stdlib.compare a b
 end
 
 module CryptMethod = struct
@@ -66,7 +66,7 @@ module CryptMethod = struct
     | 1l -> return (`Aes, rest)
     | _ -> error_msg "Unknown crypt_method: %ld" m
 
-  let compare (a: t) (b: t) = compare a b
+  let compare (a: t) (b: t) = Stdlib.compare a b
 end
 
 module Feature = struct
@@ -188,7 +188,7 @@ type t = {
   extensions: extension list;
 } [@@deriving sexp]
 
-let compare (a: t) (b: t) = compare a b
+let compare (a: t) (b: t) = Stdlib.compare a b
 
 let to_string t = Sexplib.Sexp.to_string_hum (sexp_of_t t)
 

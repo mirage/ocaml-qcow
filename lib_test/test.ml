@@ -152,7 +152,7 @@ let check_file_contents path id _sector_size _size_sectors (start, length) () =
   >>= fun b ->
   let expected = { Extent.start = sector; length = Int64.(div (of_int length) 512L) } in
   let open Lwt_error.Infix in
-  let module F = Mirage_block_lwt.Fast_fold(Reader) in
+  let module F = Mirage_block_combinators.Fast_fold(Reader) in
   F.mapped_s
     ~f:(fun bytes_seen ofs data ->
         let actual = { Extent.start = ofs; length = Int64.of_int (Cstruct.len data / 512) } in
@@ -270,40 +270,6 @@ let write_discard_read_native sector_size size_sectors (start, length) () =
 
   or_failwith @@ Lwt_main.run t
 
-let write_read_qemu sector_size size_sectors (start, length) () =
-  let module RawWriter = Block in
-  let module Writer = Qemu.Block in
-  let path = Filename.concat test_dir (Printf.sprintf "write_read_qemu.%Ld.%Ld.%d" size_sectors start length) in
-
-  let t =
-    truncate path
-    >>= fun () ->
-    let open Lwt.Infix in
-    Writer.create path Int64.(mul size_sectors (of_int sector_size))
-    >>= fun b ->
-
-    let sector = Int64.div start 512L in
-    let id = get_id () in
-    let buf = malloc length in
-    Cstruct.memset buf (id mod 256);
-    let open Lwt_write_error.Infix in
-    Writer.write b sector (fragment 4096 buf)
-    >>= fun () ->
-    let buf' = malloc length in
-    let open Lwt_error.Infix in
-    Writer.read b sector (fragment 4096 buf')
-    >>= fun () ->
-    let cmp a b = Cstruct.compare a b = 0 in
-    assert_equal ~printer:(fun x -> String.escaped (Cstruct.to_string x)) ~cmp buf buf';
-    let open Lwt.Infix in
-    Writer.disconnect b
-    >>= fun () ->
-    repair_refcounts path
-    >>= fun () ->
-    Qemu.Img.check path;
-    check_file_contents path id sector_size size_sectors (start, length) () in
-    or_failwith @@ Lwt_main.run t
-
 let check_refcount_table_allocation () =
   let module B = Qcow.Make(Ramdisk)(Time) in
   let t =
@@ -384,15 +350,6 @@ let check_file path size =
   M.disconnect qcow
   >>= fun () ->
   Block.disconnect b
-  >>= fun () ->
-  (* Check the qemu-nbd wrapper works *)
-  Qemu.Block.connect path
-  >>= fun block ->
-  Qemu.Block.get_info block
-  >>= fun info ->
-  let size = Int64.(mul info.Mirage_block.size_sectors (of_int info.Mirage_block.sector_size)) in
-  assert_equal ~printer:Int64.to_string size size;
-  Qemu.Block.disconnect block
   >>= fun () ->
   Lwt.return (Ok ())
 
@@ -735,9 +692,6 @@ let _ =
   (* Test with a 1 PiB disk, bigger than we'll need for a while. *)
   let size_sectors = Int64.div pib 512L in
   let cluster_bits = 16 in
-  let interesting_qemu_reads = List.map
-      (fun (label, start, length) -> label >:: write_read_qemu sector_size size_sectors (start, Int64.to_int length))
-      (interesting_ranges sector_size size_sectors cluster_bits) in
   let interesting_native_reads = List.map
       (fun (label, start, length) -> label >:: write_read_native sector_size size_sectors (start, Int64.to_int length))
       (interesting_ranges sector_size size_sectors cluster_bits) in
@@ -757,7 +711,7 @@ let _ =
       "discard all then compact 1L" >:: create_write_discard_all_compact 1L;
       "discard all then compact 2L" >:: create_write_discard_all_compact 2L;
       "discard all then compact 16384L" >:: create_write_discard_all_compact 16384L;
-    ] @ interesting_native_reads @ interesting_native_discards @ interesting_qemu_reads @ qemu_img_suite @ qcow_tool_suite) in
+    ] @ interesting_native_reads @ interesting_native_discards @ qemu_img_suite @ qcow_tool_suite) in
   OUnit2.run_test_tt_main (ounit2_of_ounit1 suite);
   (* If no error, delete the directory *)
   ignore(run "rm" [ "-rf"; test_dir ])
