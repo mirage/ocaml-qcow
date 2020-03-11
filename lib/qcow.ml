@@ -59,9 +59,7 @@ module Metrics = struct
     Counter.v_label ~label_name ~help ~namespace ~subsystem "discards"
 end
 
-module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
-
-  type 'a io = 'a Lwt.t
+module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time.S) = struct
 
   (* samoht: `Msg should be the list of all possible exceptions *)
   type error = [ Mirage_block.error | `Msg of string ]
@@ -86,8 +84,6 @@ module Make(Base: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) = struct
   (* Qemu-img will 'allocate' the last cluster by writing only the last sector.
      Cope with this by assuming all later sectors are full of zeroes *)
   module B = Qcow_padded.Make(Base)
-
-  type page_aligned_buffer = B.page_aligned_buffer
 
   (* Run all threads in parallel, wait for all to complete, then iterate through
      the results and return the first failure we discover. *)

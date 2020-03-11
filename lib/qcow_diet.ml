@@ -103,7 +103,7 @@ let create x y l r =
 
 let rec node x y l r =
   let hl = height l and hr = height r in
-  let open Pervasives in
+  let open Stdlib in
   if hl > hr + 2 then begin
     match l with
     | Empty -> assert false
@@ -196,7 +196,7 @@ let rec node x y l r =
       | Empty -> ()
       | Node { l; r; _ } as t ->
         let diff = height l - (height r) in
-        let open Pervasives in
+        let open Stdlib in
         if (diff > 2) || (diff < -2) then begin
           Printf.fprintf stdout "height l = %d = %s\n" (height l) (to_string_internal l);
           Printf.fprintf stdout "height r = %d = %s\n" (height r) (to_string_internal r);
@@ -404,7 +404,7 @@ let rec node x y l r =
             let i = choose free in
             let x, y = Interval.(x i, y i) in
             let len = Elt.(succ @@ y - x) in
-            let will_use = if Pervasives.(Elt.compare n len < 0) then n else len in
+            let will_use = if Stdlib.(Elt.compare n len < 0) then n else len in
             let i' = Interval.make x Elt.(pred @@ x + will_use) in
             Some ((add i' acc), (remove i' free), Elt.(n - will_use))
           with
@@ -420,7 +420,7 @@ end
 
 module Int = struct
   type t = int [@@deriving sexp]
-  let compare (x: t) (y: t) = Pervasives.compare x y
+  let compare (x: t) (y: t) = Stdlib.compare x y
   let zero = 0
   let succ x = x + 1
   let pred x = x - 1
