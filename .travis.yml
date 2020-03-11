@@ -9,6 +9,6 @@ env:
   global:
     - PACKAGE="qcow-tool" OCAML_VERSION=4.03
     - EXTRA_REMOTES="https://github.com/djs55/opam-repository.git#io-page"
-    - PINS="qcow:."
+    - PINS="qcow:. mirage-block-ramdisk:https://github.com/mirage/mirage-block-ramdisk.git"
     - COV_CONF="export TESTS=--enable-tests"
     - PRE_INSTALL_HOOK="sudo apt-get install qemu-utils -y"
