@@ -2,12 +2,8 @@ version: 2
 jobs:
   build:
     docker:
-      - image: ocaml/opam2:alpine
+      - image: docker:19.03.11
     steps:
       - checkout
-      - run: env
-      - run: opam pin add qcow .
-      - run: opam config exec -- make
-      - store_artifacts:
-          path: _build/default/cli/main.exe
-          destination: qcow-toolt
+      - setup_remote_docker
+      - run: docker build .
