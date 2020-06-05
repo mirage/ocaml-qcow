@@ -19,8 +19,8 @@ module Header = Qcow_header
 module Physical = Qcow_physical
 module Int64 = Qcow_types.Int64
 
-module Make(B: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) : sig
-  include Mirage_block_lwt.S
+module Make(B: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time.S) : sig
+  include Mirage_block.S
 
   module Config: sig
     type t = {
@@ -63,7 +63,7 @@ module Make(B: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) : sig
   val create: B.t -> size:int64 -> ?lazy_refcounts:bool
       -> ?cluster_bits:int
       -> ?config:Config.t -> unit
-      -> (t, write_error) result io
+      -> (t, write_error) result Lwt.t
   (** [create block ~size ?lazy_refcounts ?cluster_bits ?config ()] initialises
       a qcow-formatted image on [block] with virtual size [size] in bytes.
 
@@ -75,11 +75,11 @@ module Make(B: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) : sig
       The [?config] argument does not affect the on-disk format but rather the
       behaviour as seen from this client. *)
 
-  val connect: ?config:Config.t -> B.t -> t io
+  val connect: ?config:Config.t -> B.t -> t Lwt.t
   (** [connect ?config block] connects to an existing qcow-formatted image on
       [block]. *)
 
-  val resize: t -> new_size:int64 -> ?ignore_data_loss:bool -> unit -> (unit, write_error) result io
+  val resize: t -> new_size:int64 -> ?ignore_data_loss:bool -> unit -> (unit, write_error) result Lwt.t
   (** [resize block new_size_bytes ?ignore_data_loss] changes the size of the
       qcow-formatted image to [new_size_bytes], rounded up to the next allocation
       unit. This function will fail with an error if the new size would be
@@ -95,27 +95,27 @@ module Make(B: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) : sig
   (** Summary of the compaction run *)
 
   val compact: t -> ?progress_cb:(percent:int -> unit) -> unit ->
-    (compact_result, write_error) result io
+    (compact_result, write_error) result Lwt.t
   (** [compact t ()] scans the disk for unused space and attempts to fill it
       and shrink the file. This is useful if the underlying block device doesn't
       support discard and we must emulate it. *)
 
-  val discard: t -> sector:int64 -> n:int64 -> unit -> (unit, write_error) result io
+  val discard: t -> sector:int64 -> n:int64 -> unit -> (unit, write_error) result Lwt.t
   (** [discard sector n] signals that the [n] sectors starting at [sector]
       are no longer needed and the contents may be discarded. Note the contents
       may not actually be deleted: this is not a "secure erase". *)
 
-  val seek_unmapped: t -> int64 -> (int64, error) result io
+  val seek_unmapped: t -> int64 -> (int64, error) result Lwt.t
   (** [seek_unmapped t start] returns the offset of the next "hole": a region
       of the device which is guaranteed to be full of zeroes (typically
       guaranteed because it is unmapped) *)
 
-  val seek_mapped: t -> int64 -> (int64, error) result io
+  val seek_mapped: t -> int64 -> (int64, error) result Lwt.t
   (** [seek_mapped t start] returns the offset of the next region of the
       device which may have data in it (typically this is the next mapped
       region) *)
 
-  val rebuild_refcount_table: t -> (unit, write_error) result io
+  val rebuild_refcount_table: t -> (unit, write_error) result Lwt.t
   (** [rebuild_refcount_table t] rebuilds the refcount table from scratch.
       Normally we won't update the refcount table live, for performance. *)
 
@@ -129,14 +129,14 @@ module Make(B: Qcow_s.RESIZABLE_BLOCK)(Time: Mirage_time_lwt.S) : sig
     | `Reference_outside_file of int64 * int64
     | `Duplicate_reference of (int64 * int) * (int64 * int) * int64
     | `Msg of string
-  ]) result io
+  ]) result Lwt.t
   (** [check t] performs sanity checks of the file, looking for errors.
       The error [`Reference_outside_file (src, dst)] means that at offset [src]
       there is a reference to offset [dst] which is outside the file.
       The error [`Duplicate_reference (ref1, ref2, target) means that references
       at both [ref1] and [ref2] both point to the same [target] offset. *)
 
-  val flush : t -> (unit, write_error) result io
+  val flush : t -> (unit, write_error) result Lwt.t
   (** [flush t] flushes any outstanding buffered writes *)
 
   val header: t -> Header.t

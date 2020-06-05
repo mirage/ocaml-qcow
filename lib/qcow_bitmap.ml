@@ -157,7 +157,7 @@ let to_string t =
 
 module Int = struct
   type t = int
-  let compare (x: t) (y: t) = Pervasives.compare x y
+  let compare (x: t) (y: t) = Stdlib.compare x y
 end
 module IntSet = Set.Make(Int)
 

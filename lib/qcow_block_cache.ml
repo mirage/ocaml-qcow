@@ -62,8 +62,6 @@ module RangeLocks = struct
 end
 
 module Make(B: Qcow_s.RESIZABLE_BLOCK) = struct
-  type 'a io = 'a Lwt.t
-  type page_aligned_buffer = Cstruct.t
   type error = B.error
   type write_error = B.write_error
   let pp_error = B.pp_error

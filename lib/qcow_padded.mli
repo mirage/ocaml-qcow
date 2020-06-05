@@ -21,5 +21,4 @@ module Make(B: Qcow_s.RESIZABLE_BLOCK): sig
 
   include Qcow_s.RESIZABLE_BLOCK
     with type t = B.t
-     and type page_aligned_buffer = Cstruct.t
 end

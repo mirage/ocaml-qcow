@@ -257,6 +257,13 @@ let is_zero buffer =
     true
   with Non_zero -> false
 
+let handle_error pp_error =
+  function
+  | Error e ->
+    let msg = Format.asprintf "%a" pp_error e in
+    Lwt.return (`Error (false, msg))
+  | Ok x -> Lwt.return (`Ok x)
+
 let discard unsafe_buffering filename =
   let block =
      if unsafe_buffering
@@ -272,7 +279,7 @@ let discard unsafe_buffering filename =
     >>= fun info ->
     B.connect x
     >>= fun x ->
-    let module F = Mirage_block_lwt.Fast_fold(B) in
+    let module F = Mirage_block_combinators.Fast_fold(B) in
     F.mapped_s
       ~f:(fun acc sector buffer ->
         if is_zero buffer then begin
@@ -311,11 +318,7 @@ let discard unsafe_buffering filename =
       ) None x
     >>*= fun _ ->
     return (Ok ()) in
-  Lwt_main.run (t >>= function
-    | Error `Disconnected -> Lwt.return (`Error(false, "Disconnected"))
-    | Error `Unimplemented -> Lwt.return (`Error(false, "Unimplemented"))
-    | Ok x -> Lwt.return (`Ok x)
-  )
+  Lwt_main.run (t >>= handle_error B.pp_error)
 
 let compact common_options_t unsafe_buffering filename =
   handle_common common_options_t;
@@ -365,17 +368,8 @@ let compact common_options_t unsafe_buffering filename =
       Printf.printf "The file is now %Ld MiB smaller.\n" smaller_mib
     end;
     B.Debug.check_no_overlaps x
-    >>= function
-    | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
-    | Error `Disconnected -> Lwt.return (Error `Disconnected)
-    | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-    | Ok () -> Lwt.return (Ok ()) in
-  Lwt_main.run (t >>= function
-    | Error `Disconnected -> Lwt.return (`Error(false, "Disconnected"))
-    | Error `Unimplemented -> Lwt.return (`Error(false, "Unimplemented"))
-    | Error `Is_read_only -> Lwt.return (`Error(false, "Is_read_only"))
-    | Ok x -> Lwt.return (`Ok x)
-  )
+  in
+  Lwt_main.run (t >>= handle_error B.pp_write_error)
 
 let repair unsafe_buffering filename =
   let block =
@@ -393,17 +387,8 @@ let repair unsafe_buffering filename =
     B.rebuild_refcount_table x
     >>*= fun () ->
     B.Debug.check_no_overlaps x
-    >>= function
-    | Error `Is_read_only -> Lwt.return (Error `Is_read_only)
-    | Error `Disconnected -> Lwt.return (Error `Disconnected)
-    | Error `Unimplemented -> Lwt.return (Error `Unimplemented)
-    | Ok () -> Lwt.return (Ok ()) in
-  Lwt_main.run (t >>= function
-    | Error `Disconnected -> Lwt.return (`Error(false, "Disconnected"))
-    | Error `Unimplemented -> Lwt.return (`Error(false, "Unimplemented"))
-    | Error `Is_read_only -> Lwt.return (`Error(false, "Is_read_only"))
-    | Ok x -> Lwt.return (`Ok x)
-  )
+  in
+  Lwt_main.run (t >>= handle_error B.pp_write_error)
 
 let sha _common_options_t filename =
   let module B = Qcow.Make(ReadOnlyBlock)(Time) in
@@ -467,7 +452,7 @@ let decode filename output =
     >>= fun () ->
     Block.connect output
     >>= fun y ->
-    let module C = Mirage_block_lwt.Copy(B)(Block) in
+    let module C = Mirage_block_combinators.Copy(B)(Block) in
     C.v ~src:x ~dst:y
     >>= function
     | Error _ -> failwith "copy failed"
@@ -493,7 +478,7 @@ let encode filename output =
     >>= function
     | Error _ -> failwith (Printf.sprintf "Failed to create qcow formatted data on %s" output)
     | Ok qcow_output ->
-      let module C = Mirage_block_lwt.Copy(Block)(B) in
+      let module C = Mirage_block_combinators.Copy(Block)(B) in
       C.v ~src:raw_input ~dst:qcow_output
       >>= function
       | Error _ -> failwith "copy failed"
@@ -671,7 +656,7 @@ let mapped filename _format ignore_zeroes =
     B.get_info x
     >>= fun info ->
     Printf.printf "# offset (bytes), length (bytes)\n";
-    let module F = Mirage_block_lwt.Fast_fold(B) in
+    let module F = Mirage_block_combinators.Fast_fold(B) in
     F.mapped_s ~f:(fun () sector_ofs data ->
       let sector_bytes = Int64.(mul sector_ofs (of_int info.Mirage_block.sector_size)) in
       if not ignore_zeroes || not(is_zero data)
@@ -680,11 +665,7 @@ let mapped filename _format ignore_zeroes =
     ) () x
     >>*= fun () ->
     return (Ok ()) in
-  Lwt_main.run (t >>= function
-    | Error `Disconnected -> Lwt.return (`Error(false, "Disconnected"))
-    | Error `Unimplemented -> Lwt.return (`Error(false, "Unimplemented"))
-    | Ok x -> Lwt.return (`Ok x)
-  )
+  Lwt_main.run (t >>= handle_error B.pp_error)
 
 let finally f g =
   try
