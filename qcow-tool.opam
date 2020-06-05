@@ -32,8 +32,6 @@ depends: [
   "fmt" {>= "0.8.2"}
   "astring"
   "io-page"
-  "ocamlfind" {build}
-  "jbuilder"
   "ounit" {with-test}
   "mirage-block-ramdisk" {with-test}
   "ezjsonm" {with-test}
