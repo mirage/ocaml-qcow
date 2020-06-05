@@ -16,7 +16,7 @@ build: [
 
 depends: [
   "ocaml" {>= "4.03.0"}
-  "qcow" {= "0.10.4"}
+  "qcow" {= version}
   "cmdliner"
   "cstruct"
   "result"
