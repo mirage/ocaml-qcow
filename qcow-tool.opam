@@ -24,10 +24,8 @@ depends: [
   "mirage-types-lwt" {>= "3.0.0" & < "3.7.0"}
   "lwt"
   "mirage-block" {>= "2.0.0"}
-  "mirage-block-lwt"
   "mirage-block-unix" {>= "2.9.0"}
   "mirage-time" {< "2.0.0"}
-  "mirage-time-lwt"
   "sha" {>= "1.10"}
   "sexplib" {< "v0.14"}
   "logs"
