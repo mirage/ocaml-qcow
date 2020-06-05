@@ -1,3 +1,8 @@
+## 0.11.0 (2020-06-05)
+- Update the build to use `dune` (@emillon, #112)
+- Update to Mirage 4.0 interfaces (@djs55, #112)
+- LICENSE.md: add title and copyright year range (@waldyrious, #109)
+
 ## 0.10.5 (2017-12-14):
 - CLI: use the disk locking feature in mirage-block-unix >= 0.9.0
 
