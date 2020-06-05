@@ -35,7 +35,6 @@ depends: [
   "stdlib-shims"
   "sha"
   "ocamlfind" {build}
-  "oasis" {build}
   "ppx_tools"
   "ppx_deriving"
   "ppx_sexp_conv" {< "v0.14"}
