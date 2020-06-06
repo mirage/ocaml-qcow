@@ -8,9 +8,9 @@ COPY . /src
 RUN opam pin add qcow.dev /src -n
 RUN opam depext -i qcow -y
 RUN opam pin add qcow-tool.dev /src -n
-RUN opam depext -i qcow-tool -n
+RUN opam depext -i qcow-tool -y
 
 FROM alpine:latest
-COPY --from=build /src/_build/default/cli/main.exe /qcow-tool
+COPY --from=build /root/.opam/4.10.0/bin/qcow-tool /qcow-tool
 ENTRYPOINT ["/qcow-tool"]
 
