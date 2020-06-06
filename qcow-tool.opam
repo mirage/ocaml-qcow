@@ -21,7 +21,7 @@ depends: [
   "cstruct"
   "result"
   "unix-type-representations"
-  "mirage-types-lwt" {>= "3.0.0" & < "3.7.0"}
+  "mirage-types-lwt" {>= "2.6.0" & < "3.7.0"}
   "lwt"
   "mirage-block" {>= "2.0.0"}
   "mirage-block-unix" {>= "2.9.0"}
