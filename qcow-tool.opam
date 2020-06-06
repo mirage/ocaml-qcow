@@ -35,7 +35,6 @@ depends: [
   "ounit" {with-test}
   "mirage-block-ramdisk" {with-test}
   "ezjsonm" {with-test}
-  "nbd" {with-test & >= "2.0.1"}
 ]
 synopsis: "A command-line tool for manipulating qcow2-formatted data"
 url {
