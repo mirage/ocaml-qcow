@@ -10,7 +10,7 @@ tags: [
   "org:mirage"
 ]
 build: [
-  ["dune" "subst"] {pinned}
+  ["dune" "subst"] {dev}
   ["dune" "build" "-p" name "-j" jobs]
 ]
 depends: [
@@ -19,14 +19,13 @@ depends: [
   "cstruct" {>= "3.4.0"}
   "result"
   "io-page-unix" {>= "2.0.0"}
-  "mirage-types-lwt" {>= "2.6.0" & < "3.7.0"}
   "lwt" {>= "4.0.0"}
-  "mirage-block" {>= "2.0.0"}
+  "mirage-block" {>= "3.0.0"}
   "mirage-block-unix" {>= "2.5.0"}
   "mirage-block-combinators"
   "mirage-time"
   "cmdliner"
-  "sexplib" {< "v0.14"}
+  "sexplib"
   "logs"
   "fmt" {>= "0.8.2"}
   "astring"
@@ -34,10 +33,8 @@ depends: [
   "unix-type-representations"
   "stdlib-shims"
   "sha"
-  "ppx_tools"
   "ppx_deriving"
-  "ppx_sexp_conv" {< "v0.14"}
-  "ppxlib" {build}
+  "ppx_sexp_conv"
   "ounit" {with-test}
   "mirage-block-ramdisk" {with-test}
   "ezjsonm" {with-test}
