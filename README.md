@@ -33,7 +33,7 @@ val t : Ramdisk.t = <abstr>
 # module Qcow_on_ramdisk = Qcow.Make(Ramdisk);;
 module Qcow_on_ramdisk :                                                          sig                                                                               type page_aligned_buffer = Ramdisk.page_aligned_buffer
     type error =
-        [ `Disconnected | `Is_read_only | `Unimplemented | `Unknown of bytes ]
+        [ `Disconnected | `Is_read_only | `Unknown of bytes ]
     type 'a io = 'a Ramdisk.io
     type t = Qcow.Make(Ramdisk).t
     type id = Qcow.Make(Ramdisk).id
