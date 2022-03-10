@@ -10,7 +10,7 @@ tags: [
 ]
 
 build: [
-  ["dune" "subst"] {pinned}
+  ["dune" "subst"] {dev}
   ["dune" "build" "-p" name "-j" jobs]
 ]
 
@@ -21,10 +21,8 @@ depends: [
   "cstruct"
   "result"
   "unix-type-representations"
-  "mirage-types-lwt" {>= "2.6.0" & < "3.7.0"}
   "lwt"
-  "mirage-block" {>= "2.0.0"}
-  "mirage-block-unix" {>= "2.9.0"}
+  "mirage-block" {>= "3.0.0"}
   "mirage-time"
   "sha" {>= "1.10"}
   "sexplib" {< "v0.14"}
