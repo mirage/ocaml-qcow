@@ -72,7 +72,7 @@ let random_write_discard_compact nr_clusters stop_after =
         assert (n <= buffer_size_sectors);
         let buf = Cstruct.sub write_buffer 0 (Int64.to_int n * info.Mirage_block.sector_size) in
         let rec for_each_sector x remaining =
-          if Cstruct.len remaining = 0 then () else begin
+          if Cstruct.length remaining = 0 then () else begin
             let cluster = Int64.(div x (of_int sectors_per_cluster)) in
             let sector = Cstruct.sub remaining 0 512 in
             (* Only write the first byte *)
@@ -135,7 +135,7 @@ let random_write_discard_compact nr_clusters stop_after =
               | Error _ -> failwith "read"
               | Ok () ->
                 let rec for_each_sector x remaining =
-                  if Cstruct.len remaining = 0 then () else begin
+                  if Cstruct.length remaining = 0 then () else begin
                     let cluster = Int64.(div x (of_int sectors_per_cluster)) in
                     let expected = p cluster in
                     let sector = Cstruct.sub remaining 0 512 in
