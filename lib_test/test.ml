@@ -134,7 +134,7 @@ let get_id =
     this
 
 let rec fragment into remaining =
-  if into >= Cstruct.len remaining
+  if into >= Cstruct.length remaining
   then [ remaining ]
   else
     let this = Cstruct.sub remaining 0 into in
@@ -155,13 +155,13 @@ let check_file_contents path id _sector_size _size_sectors (start, length) () =
   let module F = Mirage_block_combinators.Fast_fold(Reader) in
   F.mapped_s
     ~f:(fun bytes_seen ofs data ->
-        let actual = { Extent.start = ofs; length = Int64.of_int (Cstruct.len data / 512) } in
+        let actual = { Extent.start = ofs; length = Int64.of_int (Cstruct.length data / 512) } in
         (* Any data we read now which wasn't expected must be full of zeroes *)
         let extra = Extent.difference actual expected in
         List.iter
           (fun { Extent.start; length } ->
              let buf = Cstruct.sub data (512 * Int64.(to_int (sub start ofs))) (Int64.to_int length * 512) in
-             for i = 0 to Cstruct.len buf - 1 do
+             for i = 0 to Cstruct.length buf - 1 do
                assert_equal ~printer:string_of_int ~cmp:(fun a b -> a = b) 0 (Cstruct.get_uint8 buf i);
              done;
           ) extra;
@@ -169,7 +169,7 @@ let check_file_contents path id _sector_size _size_sectors (start, length) () =
         List.iter
           (fun { Extent.start; length } ->
              let buf = Cstruct.sub data (512 * Int64.(to_int (sub start ofs))) (Int64.to_int length * 512) in
-             for i = 0 to Cstruct.len buf - 1 do
+             for i = 0 to Cstruct.length buf - 1 do
                assert_equal ~printer:string_of_int ~cmp:(fun a b -> a = b) (id mod 256) (Cstruct.get_uint8 buf i)
              done;
           ) common;
@@ -253,7 +253,7 @@ let write_discard_read_native sector_size size_sectors (start, length) () =
     >>= fun () ->
     (* Data has been discarded, so assume the implementation now guarantees
        zero (cf ATA RZAT) *)
-    for i = 0 to Cstruct.len buf' - 1 do
+    for i = 0 to Cstruct.length buf' - 1 do
       if Cstruct.get_uint8 buf' i <> 0 then failwith "I did not Read Zero After TRIM"
     done;
     let open Lwt.Infix in
