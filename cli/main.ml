@@ -52,9 +52,9 @@ let common_options_t =
   in
   Term.(const Common.make $ debug $ progress $ progress_fd)
 
-let filename =
+let filename default =
   let doc = Printf.sprintf "Path to the qcow2 file." in
-  Arg.(value & pos 0 file "test.qcow2" & info [] ~doc)
+  Arg.(value & pos 0 file default & info [] ~doc)
 
 let kib = 1024L
 
@@ -147,9 +147,9 @@ let strict_refcounts =
   let doc = Printf.sprintf "Use strict (non-lazy) refcounts" in
   Arg.(value & flag & info ["strict-refcounts"] ~doc)
 
-let output =
+let output default =
   let doc = Printf.sprintf "Path to the output file." in
-  Arg.(value & pos 0 string "test.raw" & info [] ~doc)
+  Arg.(value & pos 1 string default & info [] ~doc)
 
 let trace =
   let doc = Printf.sprintf "Print block device accesses for debugging" in
@@ -187,7 +187,7 @@ let info_cmd =
     ]
     @ help
   in
-  ( Term.(ret (const Impl.info $ filename $ filter))
+  ( Term.(ret (const Impl.info $ filename "test.qcow2" $ filter))
   , Cmd.info "info" ~sdocs:_common_options ~doc ~man
   )
 
@@ -200,7 +200,7 @@ let check_cmd =
     ]
     @ help
   in
-  ( Term.(ret (const Impl.check $ filename))
+  ( Term.(ret (const Impl.check $ filename "test.qcow2"))
   , Cmd.info "check" ~sdocs:_common_options ~doc ~man
   )
 
@@ -212,21 +212,29 @@ let decode_cmd =
     ]
     @ help
   in
-  ( Term.(ret (const Impl.decode $ filename $ output))
+  ( Term.(ret (const Impl.decode $ filename "test.qcow2" $ output "test.raw"))
   , Cmd.info "decode" ~sdocs:_common_options ~doc ~man
   )
 
 let encode_cmd =
   let doc = "Convert the file from raw to qcow2" in
   let man = [`S "DESCRIPTION"; `P "Convert a raw file to qcow2 ."] @ help in
-  ( Term.(ret (const Impl.encode $ filename $ output))
+  ( Term.(ret (const Impl.encode $ filename "test.raw" $ output "test.qcow2"))
   , Cmd.info "encode" ~sdocs:_common_options ~doc ~man
   )
 
 let create_cmd =
   let doc = "create a qcow-formatted data file" in
   let man = [`S "DESCRIPTION"; `P "Create a qcow-formatted data file"] @ help in
-  ( Term.(ret (const Impl.create $ size $ strict_refcounts $ trace $ output))
+  ( Term.(
+      ret
+        (const Impl.create
+        $ size
+        $ strict_refcounts
+        $ trace
+        $ output "test.qcow2"
+        )
+    )
   , Cmd.info "create" ~sdocs:_common_options ~doc ~man
   )
 
@@ -244,7 +252,15 @@ let resize_cmd =
     ]
     @ help
   in
-  ( Term.(ret (const Impl.resize $ trace $ filename $ size $ ignore_data_loss))
+  ( Term.(
+      ret
+        (const Impl.resize
+        $ trace
+        $ filename "test.qcow2"
+        $ size
+        $ ignore_data_loss
+        )
+    )
   , Cmd.info "resize" ~sdocs:_common_options ~doc ~man
   )
 
@@ -268,7 +284,7 @@ let discard_cmd =
     ]
     @ help
   in
-  ( Term.(ret (const Impl.discard $ unsafe_buffering $ filename))
+  ( Term.(ret (const Impl.discard $ unsafe_buffering $ filename "test.qcow2"))
   , Cmd.info "discard" ~sdocs:_common_options ~doc ~man
   )
 
@@ -284,7 +300,12 @@ let compact_cmd =
     @ help
   in
   ( Term.(
-      ret (const Impl.compact $ common_options_t $ unsafe_buffering $ filename)
+      ret
+        (const Impl.compact
+        $ common_options_t
+        $ unsafe_buffering
+        $ filename "test.qcow2"
+        )
     )
   , Cmd.info "compact" ~sdocs:_common_options ~doc ~man
   )
@@ -301,7 +322,7 @@ let repair_cmd =
     ]
     @ help
   in
-  ( Term.(ret (const Impl.repair $ unsafe_buffering $ filename))
+  ( Term.(ret (const Impl.repair $ unsafe_buffering $ filename "test.qcow2"))
   , Cmd.info "repair" ~sdocs:_common_options ~doc ~man
   )
 
@@ -322,7 +343,7 @@ let write_cmd =
     ]
     @ help
   in
-  ( Term.(ret (const Impl.write $ filename $ sector $ text $ trace))
+  ( Term.(ret (const Impl.write $ filename "test.qcow2" $ sector $ text $ trace))
   , Cmd.info "write" ~sdocs:_common_options ~doc ~man
   )
 
@@ -339,7 +360,9 @@ let read_cmd =
     ]
     @ help
   in
-  ( Term.(ret (const Impl.read $ filename $ sector $ length $ trace))
+  ( Term.(
+      ret (const Impl.read $ filename "test.qcow2" $ sector $ length $ trace)
+    )
   , Cmd.info "read" ~sdocs:_common_options ~doc ~man
   )
 
@@ -356,7 +379,14 @@ let mapped_cmd =
     ]
     @ help
   in
-  ( Term.(ret (const Impl.mapped $ filename $ output_format $ ignore_zeroes))
+  ( Term.(
+      ret
+        (const Impl.mapped
+        $ filename "test.qcow2"
+        $ output_format
+        $ ignore_zeroes
+        )
+    )
   , Cmd.info "mapped" ~sdocs:_common_options ~doc ~man
   )
 
@@ -384,7 +414,7 @@ let pattern_cmd =
         (const Impl.pattern
         $ common_options_t
         $ trace
-        $ output
+        $ output "test.qcow2"
         $ size
         $ pattern_number
         )
@@ -403,7 +433,7 @@ let sha_cmd =
     ]
     @ help
   in
-  ( Term.(ret (const Impl.sha $ common_options_t $ filename))
+  ( Term.(ret (const Impl.sha $ common_options_t $ filename "test.qcow2"))
   , Cmd.info "sha" ~sdocs:_common_options ~doc ~man
   )
 
@@ -427,7 +457,14 @@ let dehydrate_cmd =
     let doc = Printf.sprintf "Prefix of the output files" in
     Arg.(value & pos 1 string "dehydrated" & info [] ~doc)
   in
-  ( Term.(ret (const Impl.dehydrate $ common_options_t $ filename $ output))
+  ( Term.(
+      ret
+        (const Impl.dehydrate
+        $ common_options_t
+        $ filename "test.qcow2"
+        $ output
+        )
+    )
   , Cmd.info "dehydrate" ~sdocs:_common_options ~doc ~man
   )
 
