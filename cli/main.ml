@@ -216,6 +216,23 @@ let decode_cmd =
   , Cmd.info "decode" ~sdocs:_common_options ~doc ~man
   )
 
+let stream_decode_cmd =
+  let doc = "decode qcow2 formatted data from stdin and write a raw image" in
+  let man =
+    [
+      `S "DESCRIPTION"
+    ; `P "Decode qcow2 formatted data from stdin and write to a raw file."
+    ]
+    @ help
+  in
+  let output default =
+    let doc = Printf.sprintf "Path to the output file." in
+    Arg.(value & pos 0 string default & info [] ~doc)
+  in
+  ( Term.(ret (const Impl.stream_decode $ output "test.raw"))
+  , Cmd.info "stream_decode" ~sdocs:_common_options ~doc ~man
+  )
+
 let encode_cmd =
   let doc = "Convert the file from raw to qcow2" in
   let man = [`S "DESCRIPTION"; `P "Convert a raw file to qcow2 ."] @ help in
@@ -501,6 +518,7 @@ let cmds =
   ; check_cmd
   ; repair_cmd
   ; encode_cmd
+  ; stream_decode_cmd
   ; decode_cmd
   ; write_cmd
   ; read_cmd
