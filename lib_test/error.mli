@@ -14,8 +14,6 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  *
  *)
-open Result
-
 module Lwt_error: sig
   module Infix : sig
     val ( >>= ) :
