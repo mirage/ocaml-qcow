@@ -472,6 +472,10 @@ let decode filename output =
   in
   Lwt_main.run t
 
+let stream_decode output =
+  Qcow_stream.stream_decode Unix.stdin output ;
+  `Ok ()
+
 let encode filename output =
   let module B = Qcow.Make (ReadWriteBlock) in
   let open Lwt in
