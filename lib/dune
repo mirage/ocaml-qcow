@@ -1,5 +1,11 @@
+(env
+  (dev (flags (:standard -g -w -67-69)))
+  (release (flags (:standard -w -67-69)))
+)
+
 (library
   (name qcow_types)
+  (public_name qcow-types)
   (modules (:standard \ qcow qcow_debug qcow_block_cache qcow_cstructs
                       qcow_padded qcow_recycler qcow_stream))
   (libraries
@@ -19,6 +25,7 @@
 
 (library
   (name qcow_stream)
+  (public_name qcow-stream)
   (modules qcow_stream)
   (libraries
     cstruct-lwt
@@ -34,6 +41,7 @@
 
 (library
   (name qcow)
+  (public_name qcow)
   (modules qcow qcow_debug qcow_block_cache qcow_cstructs
            qcow_padded qcow_recycler)
   (libraries
