@@ -3,6 +3,6 @@
  (public_name qcow-tool)
  (package qcow-tool)
  (libraries qcow io-page logs logs.fmt sha unix-type-representations
-   cmdliner sexplib mirage-block-combinators)
+   cmdliner sexplib mirage-block-combinators mirage-block-unix)
  (preprocess
   (pps ppx_sexp_conv)))
