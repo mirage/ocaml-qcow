@@ -23,6 +23,7 @@ val create :
      read_cluster:(Cluster.t -> (Cstruct.t, Mirage_block.error) result Lwt.t)
   -> write_cluster:
        (Cluster.t -> Cstruct.t -> (unit, Mirage_block.write_error) result Lwt.t)
+  -> ?seekable:bool
   -> unit
   -> t
 (** Create a cache of clusters, given the read/write functions *)

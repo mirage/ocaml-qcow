@@ -344,7 +344,7 @@ let stream_make last_read_cluster fd h sector_size =
     read_cluster last_read_cluster fd h.cluster_bits malloc stream_read
   in
   let write_cluster _i _buf = assert false in
-  let cache = Cache.create ~read_cluster ~write_cluster () in
+  let cache = Cache.create ~read_cluster ~write_cluster ~seekable:false () in
   let metadata = Metadata.make ~cache ~cluster_bits ~locks () in
   let cluster_info =
     {i_cluster_bits= cluster_bits; i_sectors_per_cluster= sectors_per_cluster}
