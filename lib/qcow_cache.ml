@@ -28,11 +28,19 @@ type t = {
   ; write_cluster:
       Cluster.t -> Cstruct.t -> (unit, Mirage_block.write_error) result Lwt.t
   ; mutable clusters: Cstruct.t Cluster.Map.t
+  ; seekable: bool
+  ; last_read_cluster: Cluster.t ref
 }
 
-let create ~read_cluster ~write_cluster () =
+let create ~read_cluster ~write_cluster ?(seekable = true) () =
   let clusters = Cluster.Map.empty in
-  {read_cluster; write_cluster; clusters}
+  {
+    read_cluster
+  ; write_cluster
+  ; clusters
+  ; seekable
+  ; last_read_cluster= ref (Cluster.of_int 0)
+  }
 
 let read t cluster =
   if Cluster.Map.mem cluster t.clusters then
@@ -40,12 +48,30 @@ let read t cluster =
     Lwt.return (Ok data)
   else
     let open Lwt.Infix in
-    t.read_cluster cluster >>= function
-    | Error e ->
-        Lwt.return (Error e)
-    | Ok data ->
-        t.clusters <- Cluster.Map.add cluster data t.clusters ;
-        Lwt.return (Ok data)
+    let read_cluster cluster =
+      t.read_cluster cluster >>= function
+      | Error e ->
+          Lwt.return (Error e)
+      | Ok data ->
+          t.clusters <- Cluster.Map.add cluster data t.clusters ;
+          Lwt.return (Ok data)
+    in
+    let next_cluster = Cluster.succ !(t.last_read_cluster) in
+    if t.seekable then
+      read_cluster cluster
+    else
+      (* If we can't seek, we need to read sequential clusters until we reach
+         the one we want. Previous clusters will still be stored in the cache
+         for when we need them later (since we can't seek back) *)
+      let rec aux cur_cluster last_cluster =
+        let data = read_cluster cur_cluster in
+        t.last_read_cluster := cur_cluster ;
+        if cur_cluster < last_cluster then
+          aux (Cluster.succ cur_cluster) last_cluster
+        else
+          data
+      in
+      aux next_cluster cluster
 
 let write t cluster data =
   if not (Cluster.Map.mem cluster t.clusters) then (
