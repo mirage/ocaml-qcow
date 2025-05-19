@@ -16,7 +16,7 @@
  *)
 open Qcow_types
 
-module Make (B : Qcow_s.RESIZABLE_BLOCK) (Time : Mirage_time.S) : sig
+module Make (B : Qcow_s.RESIZABLE_BLOCK) : sig
   (** A cluster recycling engine *)
   type t
 

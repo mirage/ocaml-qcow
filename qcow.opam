@@ -19,12 +19,11 @@ depends: [
   "cstruct" {>= "3.4.0"}
   "result"
   "io-page-unix" {>= "2.0.0"}
-  "mirage-types-lwt" {>= "2.6.0" & < "3.7.0"}
   "lwt" {>= "4.0.0"}
   "mirage-block" {>= "2.0.0"}
   "mirage-block-unix" {>= "2.5.0"}
   "mirage-block-combinators"
-  "mirage-time"
+  "mirage-sleep"
   "cmdliner"
   "sexplib" {< "v0.14"}
   "logs"

@@ -60,7 +60,7 @@ module Metrics = struct
     Counter.v_label ~label_name ~help ~namespace ~subsystem "discards"
 end
 
-module Make (Base : Qcow_s.RESIZABLE_BLOCK) (Time : Mirage_time.S) = struct
+module Make (Base : Qcow_s.RESIZABLE_BLOCK) = struct
   (* samoht: `Msg should be the list of all possible exceptions *)
   type error = [Mirage_block.error | `Msg of string]
 
@@ -104,7 +104,7 @@ module Make (Base : Qcow_s.RESIZABLE_BLOCK) (Time : Mirage_time.S) = struct
       (Ok ()) threads
 
   module Cache = Qcow_cache
-  module Recycler = Qcow_recycler.Make (B) (Time)
+  module Recycler = Qcow_recycler.Make (B)
   module Metadata = Qcow_metadata
 
   module Stats = struct
@@ -1532,7 +1532,7 @@ module Make (Base : Qcow_s.RESIZABLE_BLOCK) (Time : Mirage_time.S) = struct
   let with_deadline t describe_fn nsec f =
     let open Lwt.Infix in
     let timeout =
-      Time.sleep_ns nsec >>= fun () -> Lwt.return (Error `Timeout)
+      Mirage_sleep.ns nsec >>= fun () -> Lwt.return (Error `Timeout)
     in
     let work = f () in
     Lwt.choose [timeout; (work >>= fun x -> Lwt.return (Ok x))] >>= function

@@ -19,7 +19,7 @@ module Header = Qcow_header
 module Physical = Qcow_physical
 module Int64 = Qcow_types.Int64
 
-module Make (B : Qcow_s.RESIZABLE_BLOCK) (Time : Mirage_time.S) : sig
+module Make (B : Qcow_s.RESIZABLE_BLOCK) : sig
   include Mirage_block.S
 
   module Config : sig
