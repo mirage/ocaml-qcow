@@ -28,7 +28,7 @@ depends: [
   "logs"
   "fmt" {>= "0.8.2"}
   "astring"
-  "io-page"
+  "io-page" {>= "2.4.0"}
   "ounit" {with-test}
   "mirage-block-ramdisk" {with-test}
   "ezjsonm" {with-test}
