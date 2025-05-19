@@ -61,3 +61,4 @@ Example
 
 In a top-level like utop:
 ```ocaml"""
+x-maintenance-intent: [ "(latest)" ]
