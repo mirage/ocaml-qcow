@@ -23,7 +23,6 @@ depends: [
   "unix-type-representations"
   "lwt"
   "mirage-block" {>= "3.0.0"}
-  "mirage-time"
   "sha" {>= "1.10"}
   "sexplib" {< "v0.14"}
   "logs"
