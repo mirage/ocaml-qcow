@@ -24,7 +24,7 @@ depends: [
   "lwt"
   "mirage-block" {>= "3.0.0"}
   "sha" {>= "1.10"}
-  "sexplib" {< "v0.14"}
+  "sexplib"
   "logs"
   "fmt" {>= "0.8.2"}
   "astring"
