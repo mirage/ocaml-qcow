@@ -423,9 +423,12 @@ let read rest =
     }
   in
   (* qemu excludes extensions from the header_length *)
-  if sizeof {t with extensions= []} <> header_length then
-    error_msg "Read a header_length of %d but we computed %d" header_length
-      (sizeof t)
+  (* we ignore additional fields like compression_type *)
+  if sizeof {t with extensions= []} > header_length then
+    error_msg "Read a header_length of %d but we computed at least %d"
+      header_length (sizeof t)
+  else if header_length mod 8 <> 0 then
+    error_msg "header_length must be a multiple of 8, but is %d" header_length
   else
     return (t, rest)
 

@@ -141,7 +141,7 @@ module Make (Base : Qcow_s.RESIZABLE_BLOCK) = struct
 
   let malloc t =
     let cluster_bits = Int32.to_int t.Header.cluster_bits in
-    let npages = max 1 (cluster_bits lsl (cluster_bits - 12)) in
+    let npages = max 1 (1 lsl (cluster_bits - 12)) in
     let pages = Io_page.(to_cstruct (get npages)) in
     Cstruct.sub pages 0 (1 lsl cluster_bits)
 
