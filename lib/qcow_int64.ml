@@ -38,7 +38,7 @@ module M = struct
   let of_int64 x = x
 end
 
-module IntervalSet = Qcow_diet.Make (M)
+module IntervalSet = Diet.Make(M)
 module Map = Map.Make (M)
 include M
 
@@ -56,3 +56,9 @@ let write t buf =
   big_enough_for "Int64.read" buf 8 >>= fun () ->
   Cstruct.BE.set_uint64 buf 0 t ;
   return (Cstruct.shift buf 8)
+
+let diet_fold_s f diet init =
+  let fm interval acc =
+    Lwt.bind acc (f interval)
+  in
+  IntervalSet.fold fm diet (Lwt.return init)

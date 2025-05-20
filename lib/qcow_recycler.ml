@@ -73,10 +73,9 @@ module Make (B : Qcow_s.RESIZABLE_BLOCK) = struct
     with
     | Some (set, _free) ->
         Log.debug (fun f ->
-            f "Allocated %s clusters from free list: %s" (Cluster.to_string n)
-              (Sexplib.Sexp.to_string_hum ~indent:2
-              @@ Cluster.IntervalSet.sexp_of_t set
-              )
+            f "Allocated %a clusters from free list: %a"
+              (Fmt.of_to_string Cluster.to_string) n
+              Cluster.IntervalSet.pp set
         ) ;
         Qcow_cluster_map.(set_cluster_state cluster_map set Available Roots) ;
         Some set

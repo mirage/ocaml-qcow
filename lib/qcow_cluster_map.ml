@@ -221,9 +221,9 @@ module Debug = struct
       if leaks && cardinal leaked <> Cluster.zero then (
         Log.err (fun f -> f "%s" (to_summary_string t)) ;
         Log.err (fun f ->
-            f "%s clusters leaked: %s"
+            f "%s clusters leaked: %a"
               (Cluster.to_string @@ cardinal leaked)
-              (Sexplib.Sexp.to_string_hum (sexp_of_t leaked))
+              Cluster.IntervalSet.pp leaked
         ) ;
         assert false
       ) ;
@@ -242,14 +242,13 @@ module Debug = struct
                 Log.err (fun f -> f "%s" (to_summary_string t)) ;
                 Log.err (fun f -> f "%s and %s are not disjoint" x_name y_name) ;
                 Log.err (fun f ->
-                    f "%s = %s" x_name (Sexplib.Sexp.to_string_hum (sexp_of_t x))
+                    f "%s = %a" x_name Cluster.IntervalSet.pp x
                 ) ;
                 Log.err (fun f ->
-                    f "%s = %s" y_name (Sexplib.Sexp.to_string_hum (sexp_of_t y))
+                    f "%s = %a" y_name Cluster.IntervalSet.pp y
                 ) ;
                 Log.err (fun f ->
-                    f "intersection = %s"
-                      (Sexplib.Sexp.to_string_hum (sexp_of_t i))
+                    f "intersection = %a" Cluster.IntervalSet.pp i
                 ) ;
                 assert false
               )
@@ -274,13 +273,13 @@ module Debug = struct
         Log.err (fun f -> f "%s" (to_summary_string t)) ;
         Log.err (fun f -> f "moves and refs are not the same") ;
         Log.err (fun f ->
-            f "moves = %s" (Sexplib.Sexp.to_string_hum (sexp_of_t (snd moves)))
+            f "moves = %a" Cluster.IntervalSet.pp (snd moves)
         ) ;
         Log.err (fun f ->
-            f "refs  = %s" (Sexplib.Sexp.to_string_hum (sexp_of_t (snd refs)))
+            f "refs  = %a" Cluster.IntervalSet.pp (snd refs)
         ) ;
         Log.err (fun f ->
-            f "diff  = %s" (Sexplib.Sexp.to_string_hum (sexp_of_t d))
+            f "diff  = %a" Cluster.IntervalSet.pp d
         )
       )
     )
@@ -437,8 +436,7 @@ let resize t new_size_clusters =
   ) ;
   if cardinal zeroed > Cluster.zero then
     Log.info (fun f ->
-        f "resize: adding available clusters %s"
-          (Sexplib.Sexp.to_string_hum ~indent:2 @@ sexp_of_t zeroed)
+        f "resize: adding available clusters %a" Cluster.IntervalSet.pp zeroed
     ) ;
   t.all <- file ;
   match t.id with
@@ -452,10 +450,7 @@ module Junk = struct
   let get t = t.junk
 
   let add t more =
-    Log.debug (fun f ->
-        f "Junk.add %s"
-          (Sexplib.Sexp.to_string (Cluster.IntervalSet.sexp_of_t more))
-    ) ;
+    Log.debug (fun f -> f "Junk.add %a" Cluster.IntervalSet.pp more) ;
     t.junk <- Cluster.IntervalSet.union t.junk more ;
     ( match t.id with
     | None ->
@@ -490,14 +485,8 @@ module Junk = struct
     t.junk <- Cluster.IntervalSet.diff t.junk less ;
     if Cluster.sub (cardinal old_junk) (cardinal less) <> cardinal t.junk then (
       Log.err (fun f -> f "Junk.remove: clusters were not in junk") ;
-      Log.err (fun f ->
-          f "Junk = %s"
-            (Sexplib.Sexp.to_string_hum ~indent:2 @@ sexp_of_t old_junk)
-      ) ;
-      Log.err (fun f ->
-          f "To remove = %s"
-            (Sexplib.Sexp.to_string_hum ~indent:2 @@ sexp_of_t less)
-      ) ;
+      Log.err (fun f -> f "Junk = %a" Cluster.IntervalSet.pp old_junk) ;
+      Log.err (fun f -> f "To remove = %a" Cluster.IntervalSet.pp less) ;
       failwith "Junk.remove: clusters were not in junk"
     ) ;
     Lwt_condition.signal t.c ()
@@ -510,9 +499,7 @@ module Available = struct
 
   let add t more =
     let open Cluster.IntervalSet in
-    Log.debug (fun f ->
-        f "Available.add %s" (Sexplib.Sexp.to_string (sexp_of_t more))
-    ) ;
+    Log.debug (fun f -> f "Available.add %a" Cluster.IntervalSet.pp more) ;
     t.available <- union t.available more ;
     ( match t.id with
     | None ->
@@ -528,9 +515,7 @@ module Available = struct
 
   let remove t less =
     let open Cluster.IntervalSet in
-    Log.debug (fun f ->
-        f "Available.remove %s" (Sexplib.Sexp.to_string @@ sexp_of_t less)
-    ) ;
+    Log.debug (fun f -> f "Available.remove %a" Cluster.IntervalSet.pp less) ;
     let old_available = t.available in
     t.available <- Cluster.IntervalSet.diff t.available less ;
     if
@@ -539,13 +524,9 @@ module Available = struct
     then (
       Log.err (fun f -> f "Available.remove: clusters were not in junk") ;
       Log.err (fun f ->
-          f "Available = %s"
-            (Sexplib.Sexp.to_string_hum ~indent:2 @@ sexp_of_t old_available)
+          f "Available = %a" Cluster.IntervalSet.pp old_available
       ) ;
-      Log.err (fun f ->
-          f "To remove = %s"
-            (Sexplib.Sexp.to_string_hum ~indent:2 @@ sexp_of_t less)
-      ) ;
+      Log.err (fun f -> f "To remove = %a" Cluster.IntervalSet.pp less) ;
       failwith "Available.remove: clusters were not in available"
     ) ;
     Lwt_condition.signal t.c ()
@@ -557,10 +538,7 @@ module Erased = struct
   let get t = t.erased
 
   let add t more =
-    Log.debug (fun f ->
-        f "Erased.add %s"
-          (Sexplib.Sexp.to_string (Cluster.IntervalSet.sexp_of_t more))
-    ) ;
+    Log.debug (fun f -> f "Erased.add %a" Cluster.IntervalSet.pp more) ;
     t.erased <- Cluster.IntervalSet.union t.erased more ;
     ( match t.id with
     | None ->
@@ -582,12 +560,10 @@ module Erased = struct
     then (
       Log.err (fun f -> f "Erased.remove: clusters were not in erased") ;
       Log.err (fun f ->
-          f "Erased = %s"
-            (Sexplib.Sexp.to_string_hum ~indent:2 @@ sexp_of_t old_erased)
+          f "Erased = %a" Cluster.IntervalSet.pp old_erased
       ) ;
       Log.err (fun f ->
-          f "To remove = %s"
-            (Sexplib.Sexp.to_string_hum ~indent:2 @@ sexp_of_t less)
+          f "To remove = %a" Cluster.IntervalSet.pp less
       ) ;
       failwith "Erased.remove: clusters were not in erased"
     ) ;
@@ -600,10 +576,7 @@ module Copies = struct
   let get t = t.erased
 
   let add t more =
-    Log.debug (fun f ->
-        f "Copies.add %s"
-          (Sexplib.Sexp.to_string (Cluster.IntervalSet.sexp_of_t more))
-    ) ;
+    Log.debug (fun f -> f "Copies.add %a" Cluster.IntervalSet.pp more) ;
     t.copies <- Cluster.IntervalSet.union t.copies more ;
     if t.runtime_asserts then Debug.check ~leaks:false t ;
     Lwt_condition.signal t.c ()
@@ -615,14 +588,8 @@ module Copies = struct
     if Cluster.sub (cardinal old_copies) (cardinal less) <> cardinal t.copies
     then (
       Log.err (fun f -> f "Copies.remove: clusters were not in copies") ;
-      Log.err (fun f ->
-          f "Copies = %s"
-            (Sexplib.Sexp.to_string_hum ~indent:2 @@ sexp_of_t old_copies)
-      ) ;
-      Log.err (fun f ->
-          f "To remove = %s"
-            (Sexplib.Sexp.to_string_hum ~indent:2 @@ sexp_of_t less)
-      ) ;
+      Log.err (fun f -> f "Copies = %a" Cluster.IntervalSet.pp old_copies) ;
+      Log.err (fun f -> f "To remove = %a" Cluster.IntervalSet.pp less) ;
       failwith "Copies.remove: clusters were not in copies"
     ) ;
     Lwt_condition.signal t.c ()
@@ -635,17 +602,15 @@ module Roots = struct
 
   let add t more =
     let open Cluster.IntervalSet in
-    Log.debug (fun f ->
-        f "Roots.add %s" (Sexplib.Sexp.to_string (sexp_of_t more))
-    ) ;
+    Log.debug (fun f -> f "Roots.add %a" Cluster.IntervalSet.pp more) ;
     let intersection = inter more t.roots in
     if not @@ is_empty @@ intersection then (
       Log.err (fun f ->
-          f "Clusters are already registered as roots: %s"
-            (Sexplib.Sexp.to_string @@ sexp_of_t more)
+          f "Clusters are already registered as roots: %a"
+            Cluster.IntervalSet.pp more
       ) ;
       Log.err (fun f ->
-          f "Intersection: %s" (Sexplib.Sexp.to_string @@ sexp_of_t intersection)
+          f "Intersection: %a" Cluster.IntervalSet.pp intersection
       ) ;
       assert false
     ) ;
@@ -668,14 +633,8 @@ module Roots = struct
     t.roots <- diff t.roots less ;
     if Cluster.sub (cardinal old_roots) (cardinal less) <> cardinal t.roots then (
       Log.err (fun f -> f "Roots.remove: clusters were not in roots") ;
-      Log.err (fun f ->
-          f "Roots = %s"
-            (Sexplib.Sexp.to_string_hum ~indent:2 @@ sexp_of_t old_roots)
-      ) ;
-      Log.err (fun f ->
-          f "To remove = %s"
-            (Sexplib.Sexp.to_string_hum ~indent:2 @@ sexp_of_t less)
-      ) ;
+      Log.err (fun f -> f "Roots = %a" Cluster.IntervalSet.pp old_roots) ;
+      Log.err (fun f -> f "To remove = %a" Cluster.IntervalSet.pp less) ;
       failwith "Roots.remove: clusters were not in roots"
     ) ;
     Lwt_condition.signal t.c ()
@@ -753,10 +712,7 @@ let set_move_state t move state =
               (Cluster.to_string move.Move.src)
               (Cluster.to_string move.Move.dst)
         ) ;
-        Log.err (fun f ->
-            f "Junk = %s"
-              (Sexplib.Sexp.to_string_hum ~indent:2 @@ sexp_of_t t.junk)
-        ) ;
+        Log.err (fun f -> f "Junk = %a" Cluster.IntervalSet.pp t.junk) ;
         assert false
       ) ;
       if mem dst t.copies then (
@@ -767,10 +723,7 @@ let set_move_state t move state =
               (Cluster.to_string move.Move.src)
               (Cluster.to_string move.Move.dst)
         ) ;
-        Log.err (fun f ->
-            f "Copies = %s"
-              (Sexplib.Sexp.to_string_hum ~indent:2 @@ sexp_of_t t.copies)
-        ) ;
+        Log.err (fun f -> f "Copies = %a" Cluster.IntervalSet.pp t.copies) ;
         assert false
       ) ;
       if Cluster.Map.mem dst t.moves then (
