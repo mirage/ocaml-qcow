@@ -39,12 +39,6 @@ module ReadWriteBlock = struct
   let connect path = connect ~lock:true path
 end
 
-module Time = struct
-  type 'a io = 'a Lwt.t
-
-  let sleep_ns ns = Lwt_unix.sleep (Int64.to_float ns /. 1e9)
-end
-
 module TracedBlock = struct
   include ReadWriteBlock
 
@@ -170,7 +164,7 @@ let write filename sector data trace =
       (module ReadWriteBlock : BLOCK)
   in
   let module BLOCK = (val block : BLOCK) in
-  let module B = Qcow.Make (BLOCK) (Time) in
+  let module B = Qcow.Make (BLOCK) in
   let t =
     let open Lwt in
     BLOCK.connect filename >>= fun x ->
@@ -195,7 +189,7 @@ let read filename sector length trace =
       (module ReadWriteBlock : BLOCK)
   in
   let module BLOCK = (val block : BLOCK) in
-  let module B = Qcow.Make (BLOCK) (Time) in
+  let module B = Qcow.Make (BLOCK) in
   let t =
     let open Lwt in
     BLOCK.connect filename >>= fun x ->
@@ -214,7 +208,7 @@ let read filename sector length trace =
   Lwt_main.run t
 
 let check filename =
-  let module B = Qcow.Make (ReadOnlyBlock) (Time) in
+  let module B = Qcow.Make (ReadOnlyBlock) in
   let open Lwt in
   let t =
     let rec retry = function
@@ -286,7 +280,7 @@ let discard unsafe_buffering filename =
       (module ReadWriteBlock : BLOCK)
   in
   let module BLOCK = (val block : BLOCK) in
-  let module B = Qcow.Make (BLOCK) (Time) in
+  let module B = Qcow.Make (BLOCK) in
   let open Lwt in
   let t =
     BLOCK.connect filename >>= fun x ->
@@ -341,7 +335,7 @@ let compact common_options_t unsafe_buffering filename =
       (module ReadWriteBlock : BLOCK)
   in
   let module BLOCK = (val block : BLOCK) in
-  let module B = Qcow.Make (BLOCK) (Time) in
+  let module B = Qcow.Make (BLOCK) in
   let open Lwt in
   let progress_cb =
     match
@@ -397,7 +391,7 @@ let repair unsafe_buffering filename =
       (module ReadWriteBlock : BLOCK)
   in
   let module BLOCK = (val block : BLOCK) in
-  let module B = Qcow.Make (BLOCK) (Time) in
+  let module B = Qcow.Make (BLOCK) in
   let open Lwt in
   let t =
     BLOCK.connect filename >>= fun x ->
@@ -407,7 +401,7 @@ let repair unsafe_buffering filename =
   Lwt_main.run (t >>= handle_error B.pp_write_error)
 
 let sha _common_options_t filename =
-  let module B = Qcow.Make (ReadOnlyBlock) (Time) in
+  let module B = Qcow.Make (ReadOnlyBlock) in
   let open Lwt in
   let t =
     Block.connect filename >>= fun x ->
@@ -453,7 +447,7 @@ let sha _common_options_t filename =
   Lwt_main.run t
 
 let decode filename output =
-  let module B = Qcow.Make (Block) (Time) in
+  let module B = Qcow.Make (Block) in
   let open Lwt in
   let t =
     Block.connect filename >>= fun x ->
@@ -479,7 +473,7 @@ let decode filename output =
   Lwt_main.run t
 
 let encode filename output =
-  let module B = Qcow.Make (ReadWriteBlock) (Time) in
+  let module B = Qcow.Make (ReadWriteBlock) in
   let open Lwt in
   let t =
     ReadWriteBlock.connect filename >>= fun raw_input ->
@@ -517,7 +511,7 @@ let create size strict_refcounts trace filename =
       (module ReadWriteBlock : BLOCK)
   in
   let module BLOCK = (val block : BLOCK) in
-  let module B = Qcow.Make (BLOCK) (Time) in
+  let module B = Qcow.Make (BLOCK) in
   let open Lwt in
   let t =
     Lwt_unix.openfile filename [Lwt_unix.O_CREAT] 0o0644 >>= fun fd ->
@@ -541,7 +535,7 @@ let pattern common_options_t trace filename size number =
   in
   let module Uncached = (val block : BLOCK) in
   let module BLOCK = Qcow_block_cache.Make (Uncached) in
-  let module B = Qcow.Make (BLOCK) (Time) in
+  let module B = Qcow.Make (BLOCK) in
   let open Lwt in
   let progress_cb =
     if common_options_t.Common.progress then Some progress_cb else None
@@ -667,7 +661,7 @@ let resize trace filename new_size ignore_data_loss =
       (module ReadWriteBlock : BLOCK)
   in
   let module BLOCK = (val block : BLOCK) in
-  let module B = Qcow.Make (BLOCK) (Time) in
+  let module B = Qcow.Make (BLOCK) in
   let open Lwt in
   let t =
     BLOCK.connect filename >>= fun block ->
@@ -713,7 +707,7 @@ let is_zero buf =
   loop 0
 
 let mapped filename _format ignore_zeroes =
-  let module B = Qcow.Make (Block) (Time) in
+  let module B = Qcow.Make (Block) in
   let open Lwt in
   let t =
     Block.connect filename >>= fun x ->
@@ -745,7 +739,7 @@ type metadata = {blocks: Qcow.Int64.IntervalSet.t; total_size: int64}
 [@@deriving sexp]
 
 let dehydrate _common input_filename output_filename =
-  let module B = Qcow.Make (ReadOnlyBlock) (Time) in
+  let module B = Qcow.Make (ReadOnlyBlock) in
   let open Lwt.Infix in
   let t =
     (* NB: all resources are only freed when the CLI exits. Don't copy this

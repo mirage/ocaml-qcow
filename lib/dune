@@ -2,8 +2,7 @@
  (name qcow)
  (public_name qcow)
  (libraries astring cstruct logs lwt mirage-block mirage-block-unix
-   mirage-types.lwt prometheus io-page sexplib stdlib-shims
-   mirage-time)
+   prometheus io-page sexplib stdlib-shims mirage-sleep)
  (wrapped false)
  (preprocess
   (pps ppx_sexp_conv)))

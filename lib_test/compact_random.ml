@@ -20,7 +20,7 @@ module FromResult = Error.FromResult
 open Utils
 
 module Block = UnsafeBlock
-module B = Qcow.Make(Block)(Time)
+module B = Qcow.Make(Block)
 
 let debug = ref false
 

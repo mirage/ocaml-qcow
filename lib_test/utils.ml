@@ -108,8 +108,3 @@ let test_dir =
 let malloc (length: int) =
   let npages = (length + 4095)/4096 in
   Cstruct.sub Io_page.(to_cstruct (get npages)) 0 length
-
-module Time = struct
-  type 'a io = 'a Lwt.t
-  let sleep_ns ns = Lwt_unix.sleep (Int64.to_float ns /. 1_000_000_000.0)
-end

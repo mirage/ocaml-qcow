@@ -19,7 +19,7 @@ module Locks = Qcow_locks
 module Metadata = Qcow_metadata
 module Physical = Qcow_physical
 
-module Make (B : Qcow_s.RESIZABLE_BLOCK) (Time : Mirage_time.S) = struct
+module Make (B : Qcow_s.RESIZABLE_BLOCK) = struct
   type t = {
       base: B.t
     ; sector_size: int
@@ -594,7 +594,7 @@ module Make (B : Qcow_s.RESIZABLE_BLOCK) (Time : Mirage_time.S) = struct
       in
       wait () >>= fun () ->
       t.need_to_flush <- false ;
-      Time.sleep_ns 5_000_000_000L >>= fun () ->
+      Mirage_sleep.ns 5_000_000_000L >>= fun () ->
       Log.info (fun f ->
           f "block recycler: triggering background flush: %s"
             (Qcow_cluster_map.to_summary_string cluster_map)
@@ -669,7 +669,7 @@ module Make (B : Qcow_s.RESIZABLE_BLOCK) (Time : Mirage_time.S) = struct
                   nr_junk x
             ) ;
             let rec wait nr_junk n =
-              Time.sleep_ns 5_000_000_000L >>= fun () ->
+              Mirage_sleep.ns 5_000_000_000L >>= fun () ->
               let nr_junk' =
                 Cluster.to_int64
                 @@ Cluster.IntervalSet.cardinal
