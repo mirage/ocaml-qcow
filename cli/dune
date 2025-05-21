@@ -6,3 +6,6 @@
    cmdliner sexplib mirage-block-combinators mirage-block-unix)
  (preprocess
   (pps ppx_sexp_conv)))
+
+(cram
+  (deps main.exe))

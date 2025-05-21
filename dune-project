@@ -1,2 +1,5 @@
-(lang dune 2.0)
+(lang dune 3.15)
+
+(cram enable)
+
 (name qcow)
