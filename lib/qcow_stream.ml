@@ -113,6 +113,8 @@ let read_cluster last_read_cluster fd cluster_bits alloc_func read_func i =
 
 exception Reference_outside_file of int64 * int64
 
+exception Compressed_unsupported
+
 (* Reads and parses refcount, L1, L2 tables.
    See the note above on the structure of the QCOW file we expect.
 *)
@@ -178,7 +180,15 @@ let stream_make_cluster_map h size_sectors cluster_info metadata () =
   let parse x =
     if x = Physical.unmapped then
       Cluster.zero
-    else
+    else if Physical.is_compressed x then (
+      (* TODO: Is it worth supporting compressed cluster descriptors? Quite a lot
+         of popular in-the-wild images feature these. If it's possible to convert
+         an image to get rid of compressed cluster descriptors, note it in the error *)
+      Log.err (fun f ->
+          f "Unsupported compressed Cluster Descriptor has been found"
+      ) ;
+      raise Compressed_unsupported
+    ) else
       Physical.cluster ~cluster_bits x
   in
 
