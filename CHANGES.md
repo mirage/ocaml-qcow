@@ -1,3 +1,11 @@
+## 0.12.0 (2025-05-29)
+
+- Build fixes (@last-genius, #123)
+- Further fixes: parsing, CLI, overallocation (@last-genius, #124)
+- remove mirage-types, add mirage-sleep dependency (@hannesm, #125)
+- Add x-maintenance-intent to opam files (@hannesm, #126)
+- Add a Qcow_stream module (@last-genius, #127)
+
 ## 0.11.0 (2020-06-05)
 - Update the build to use `dune` (@emillon, #112)
 - Update to Mirage 4.0 interfaces (@djs55, #112)
