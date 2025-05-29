@@ -40,6 +40,8 @@ module DebugSetting = struct let compact_mid_write = ref false end
 
 open Prometheus
 
+exception Compressed_unsupported
+
 module Metrics = struct
   let namespace = "Mirage"
 
@@ -874,7 +876,7 @@ module Make (Base : Qcow_s.RESIZABLE_BLOCK) = struct
               Locks.unlock l1_lock ; Lwt.return (Ok None)
             ) else (
               if Physical.is_compressed l2_table_offset then
-                failwith "compressed" ;
+                raise Compressed_unsupported ;
               Lwt.return (Ok (Some l2_table_offset))
             )
           )
@@ -886,7 +888,7 @@ module Make (Base : Qcow_s.RESIZABLE_BLOCK) = struct
               Locks.unlock l1_lock ; Locks.unlock l2_lock ; Lwt.return (Ok None)
             ) else (
               if Physical.is_compressed cluster_offset then
-                failwith "compressed" ;
+                raise Compressed_unsupported ;
               Lwt.return (Ok (Some cluster_offset))
             )
           )
@@ -977,7 +979,8 @@ module Make (Base : Qcow_s.RESIZABLE_BLOCK) = struct
                     Lwt.return_unit
                   )
               else (
-                if Physical.is_compressed data_offset then failwith "compressed" ;
+                if Physical.is_compressed data_offset then
+                  raise Compressed_unsupported ;
                 Lwt.return (Ok (data_offset, l1_lock, l2_lock))
               )
           )
@@ -1244,7 +1247,12 @@ module Make (Base : Qcow_s.RESIZABLE_BLOCK) = struct
     let parse x =
       if x = Physical.unmapped then
         Cluster.zero
-      else
+      else if Physical.is_compressed x then (
+        Log.err (fun f ->
+            f "Unsupported compressed Cluster Descriptor has been found"
+        ) ;
+        raise Compressed_unsupported
+      ) else
         Physical.cluster ~cluster_bits:t.cluster_bits x
     in
 

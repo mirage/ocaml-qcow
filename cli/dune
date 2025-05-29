@@ -2,7 +2,10 @@
  (name main)
  (public_name qcow-tool)
  (package qcow-tool)
- (libraries qcow io-page logs logs.fmt sha unix-type-representations
-   cmdliner sexplib mirage-block-combinators)
+ (libraries qcow qcow_stream io-page logs logs.fmt sha unix-type-representations
+   cmdliner sexplib mirage-block-combinators mirage-block-unix)
  (preprocess
   (pps ppx_sexp_conv)))
+
+(cram
+  (deps main.exe))
