@@ -1,3 +1,6 @@
+## 0.12.1 (2025-06-02)
+- Fix dune and opam metadata issues (@psafont #129)
+
 ## 0.12.0 (2025-05-29)
 
 - Build fixes (@last-genius, #123)
