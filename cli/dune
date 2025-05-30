@@ -8,4 +8,5 @@
   (pps ppx_sexp_conv)))
 
 (cram
-  (deps main.exe))
+ (package qcow-tool)
+ (deps main.exe))
