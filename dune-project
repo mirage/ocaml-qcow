@@ -19,10 +19,11 @@
   (depends
     (ocaml (>= 4.12.0))
     astring
-    cstruct
+    (cstruct (>= 6.1.0))
     logs
     lwt
     mirage-block
+    ppx_sexp_conv
     prometheus
     sexplib
   )
