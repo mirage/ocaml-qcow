@@ -22,7 +22,7 @@
     (cstruct (>= 6.1.0))
     logs
     lwt
-    mirage-block
+    (mirage-block (>= 3.0.0))
     ppx_sexp_conv
     prometheus
     sexplib
@@ -43,7 +43,7 @@
     (qcow-types (= :version))
     cstruct-lwt
     io-page
-    lwt
+    (lwt (>= 5.5.0))
   )
 )
 

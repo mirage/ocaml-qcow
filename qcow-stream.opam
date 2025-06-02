@@ -14,7 +14,7 @@ depends: [
   "qcow-types" {= version}
   "cstruct-lwt"
   "io-page"
-  "lwt"
+  "lwt" {>= "5.5.0"}
   "odoc" {with-doc}
 ]
 build: [
