@@ -770,7 +770,7 @@ let dehydrate _common input_filename output_filename =
       0o0644
     >>= fun output_fd ->
     (* Append the metadata intervals from the `input_fd` to `metadata_fd` *)
-    Qcow.Int64.IntervalSet.fold_s
+    Qcow.Int64.diet_fold_s
       (fun i () ->
         let x, y = Qcow.Int64.(IntervalSet.Interval.(x i, y i)) in
         let rec loop x =
@@ -819,7 +819,7 @@ let rehydrate _common input_filename output_filename =
     >>= fun _ ->
     Lwt_unix.write output_fd (Bytes.of_string "\000") 0 1 >>= fun _ ->
     (* Append the metadata intervals from the `input_fd` to `metadata_fd` *)
-    Qcow.Int64.IntervalSet.fold_s
+    Qcow.Int64.diet_fold_s
       (fun i () ->
         let x, y = Qcow.Int64.(IntervalSet.Interval.(x i, y i)) in
         let rec loop x =

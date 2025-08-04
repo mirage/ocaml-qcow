@@ -38,7 +38,37 @@ module M = struct
   let of_int64 x = x
 end
 
-module IntervalSet = Qcow_diet.Make (M)
+module IntervalSet = struct
+  include Diet.Make(M)
+
+  module Interval = struct
+    include Interval
+
+    let sexp_of_t t =
+      Sexplib0.Sexp_conv.sexp_of_pair M.sexp_of_t M.sexp_of_t (x t, y t)
+
+    let t_of_sexp sexp =
+      let x, y = Sexplib0.Sexp_conv.pair_of_sexp M.t_of_sexp M.t_of_sexp sexp in
+      make x y
+  end
+
+  let to_seq t = fold Seq.cons t Seq.empty
+
+  let of_seq s =
+    let add_one acc elt = add elt acc in
+    Seq.fold_left add_one empty s
+
+  let sexp_of_t t =
+    to_seq t
+    |> List.of_seq
+    |> Sexplib0.Sexp_conv.sexp_of_list Interval.sexp_of_t
+
+  let t_of_sexp sexp =
+    Sexplib0.Sexp_conv.list_of_sexp Interval.t_of_sexp sexp
+    |> List.to_seq
+    |> of_seq
+end
+
 module Map = Map.Make (M)
 include M
 
@@ -56,3 +86,9 @@ let write t buf =
   big_enough_for "Int64.read" buf 8 >>= fun () ->
   Cstruct.BE.set_uint64 buf 0 t ;
   return (Cstruct.shift buf 8)
+
+let diet_fold_s f diet init =
+  let fm interval acc =
+    Lwt.bind acc (f interval)
+  in
+  IntervalSet.fold fm diet (Lwt.return init)
