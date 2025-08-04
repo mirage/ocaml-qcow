@@ -8,5 +8,5 @@ RUN opam pin add . -n --with-version=~dev
 RUN opam install .
 
 FROM alpine:latest
-COPY --from=build /root/.opam/4.12.0/bin/qcow-tool /qcow-tool
+COPY --from=build /home/opam/.opam/4.12/bin/qcow-tool /
 ENTRYPOINT ["/qcow-tool"]
