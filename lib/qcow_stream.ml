@@ -419,36 +419,41 @@ let copy_data ~progress_cb last_read_cluster cluster_bits input_fd output_fd
      behind a mutex *)
   let read_mutex = Lwt_mutex.create () in
 
-  let max_cluster, _ = Cluster.Map.max_binding data_cluster_map in
-  let cur_percent = ref 0 in
-  let thread (cluster, file_offset) =
-    (* Copy the entire cluster *)
-    Log.debug (fun f ->
-        f "copy cluster: %Lu, file_offset : %Lu\n" (Cluster.to_int64 cluster)
-          file_offset
-    ) ;
-    let now_percent = Cluster.(to_int cluster / (to_int max_cluster * 100)) in
-    if now_percent > !cur_percent then (
-      cur_percent := now_percent ;
-      progress_cb now_percent
-    ) ;
-    (* NOTE: no other Lwt promise can be called between the start of the thread
-       and the mutex locking or the order of reads would be disrupted.
-       Threads are woken up in the order they locked the mutex, so the order is
-       currently preserved.
-    *)
-    let* buf =
-      Lwt_mutex.with_lock read_mutex (fun () -> read_cluster_bytes cluster)
-    in
-    match buf with
-    | Ok buf ->
-        complete_pwrite_bytes output_fd buf (Int64.to_int file_offset)
-    | Error _ ->
-        failwith "I/O error"
-  in
-  let seq = Cluster.Map.to_seq data_cluster_map in
-  let seq = Lwt_seq.of_seq seq in
-  Lwt_seq.iter_n ~max_concurrency:8 thread seq
+  match Cluster.Map.max_binding_opt data_cluster_map with
+  | Some (max_cluster, _) ->
+      let cur_percent = ref 0 in
+      let thread (cluster, file_offset) =
+        (* Copy the entire cluster *)
+        Log.debug (fun f ->
+            f "copy cluster: %Lu, file_offset : %Lu\n"
+              (Cluster.to_int64 cluster) file_offset
+        ) ;
+        let now_percent =
+          Cluster.(to_int cluster / (to_int max_cluster * 100))
+        in
+        if now_percent > !cur_percent then (
+          cur_percent := now_percent ;
+          progress_cb now_percent
+        ) ;
+        (* NOTE: no other Lwt promise can be called between the start of the thread
+           and the mutex locking or the order of reads would be disrupted.
+           Threads are woken up in the order they locked the mutex, so the order is
+           currently preserved.
+        *)
+        let* buf =
+          Lwt_mutex.with_lock read_mutex (fun () -> read_cluster_bytes cluster)
+        in
+        match buf with
+        | Ok buf ->
+            complete_pwrite_bytes output_fd buf (Int64.to_int file_offset)
+        | Error _ ->
+            failwith "I/O error"
+      in
+      let seq = Cluster.Map.to_seq data_cluster_map in
+      let seq = Lwt_seq.of_seq seq in
+      Lwt_seq.iter_n ~max_concurrency:8 thread seq
+  | None ->
+      Lwt.return_unit
 
 let stream_decode ?(progress_cb = fun _x -> ()) ?header_info input_fd
     output_path =
