@@ -36,7 +36,26 @@ module Log = (val Logs.src_log src : Logs.LOG)
 type cluster_info = {i_cluster_bits: int; i_sectors_per_cluster: int64}
 
 (* I/O functions *)
-let stream_read fd buf = Lwt_cstruct.complete (Lwt_cstruct.read fd) buf
+
+(* Like Lwt_csruct.complete, but does not raise End_of_file, instead returns
+   the part of the Cstruct that was read up to EOF *)
+let read_complete op t =
+  let open Lwt in
+  let open Lwt.Syntax in
+  let rec loop t bytes_read =
+    let* n = op t in
+    let t = Cstruct.shift t n in
+    if Cstruct.length t = 0 then
+      return (bytes_read + n)
+    else if n = 0 then
+      return bytes_read
+    else
+      loop t (bytes_read + n)
+  in
+  let* bytes_read = loop t 0 in
+  return (Cstruct.sub t 0 bytes_read)
+
+let stream_read fd buf = read_complete (Lwt_cstruct.read fd) buf
 
 let complete_pwrite_bytes fd buf file_offset =
   let pwrite fd buf ~file_offset ~buf_offset ~len =
@@ -95,7 +114,7 @@ let read_cluster last_read_cluster fd cluster_bits alloc_func read_func i =
     Log.debug (fun f -> f "\tread_cluster %Lu\n" cluster) ;
     let open Lwt.Infix in
     Lwt.catch
-      (fun () -> read_func fd buf >>= fun () -> Lwt.return (Ok buf))
+      (fun () -> read_func fd buf >>= fun read_buf -> Lwt.return (Ok read_buf))
       (fun e ->
         Log.err (fun f ->
             f "read_cluster %Ld: low-level I/O exception %s" cluster
@@ -367,7 +386,7 @@ let start_stream_decode fd =
   (* Read a single sector from the beginning of the stream *)
   let sector_size = 512 in
   let buf = Cstruct.sub Io_page.(to_cstruct (get 1)) 0 sector_size in
-  let* () = stream_read fd buf in
+  let* buf = stream_read fd buf in
   (* Parse the header *)
   match Qcow_header.read buf with
   | Error (`Msg msg) ->
@@ -387,7 +406,7 @@ let start_stream_decode fd =
           let pages = Io_page.(to_cstruct (get npages)) in
           (* We've already read a single 512-byte sector *)
           let buf = Cstruct.sub pages 0 (cluster_size - 512) in
-          Lwt.async (fun () -> stream_read fd buf)
+          Lwt.ignore_result (stream_read fd buf)
       ) ;
 
       (* Parse all the tables to get a full map of data clusters *)
@@ -407,7 +426,8 @@ let copy_data ~progress_cb last_read_cluster cluster_bits input_fd output_fd
   let open Lwt.Syntax in
   let input_channel = Lwt_io.of_fd ~mode:Lwt_io.input input_fd in
   let complete_read_bytes ic buf =
-    Lwt_io.read_into_exactly ic buf 0 (Bytes.length buf)
+    let* () = Lwt_io.read_into_exactly ic buf 0 (Bytes.length buf) in
+    Lwt.return buf
   in
   let read_cluster_bytes =
     read_cluster last_read_cluster input_channel cluster_bits malloc_bytes
