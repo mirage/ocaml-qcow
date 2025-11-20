@@ -1,3 +1,9 @@
+## 0.12.2 (2025-11-20)
+- opam: metadata fixes discovered by CI (psafont #130, last-genius #131)
+- Use upstream diet package (psafont #113)
+- qcow_stream can now read QCOW files with no data cluster_bits, and empty raw
+  disks (last-genius #131)
+
 ## 0.12.1 (2025-06-02)
 - Fix dune and opam metadata issues (@psafont #129)
 
