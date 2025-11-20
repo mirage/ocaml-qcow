@@ -9,4 +9,5 @@
 
 (cram
  (package qcow-tool)
+ (enabled_if (and (not (= %{architecture} "x86_32")) (not (= %{architecture} "arm32"))))
  (deps main.exe))

@@ -36,7 +36,26 @@ module Log = (val Logs.src_log src : Logs.LOG)
 type cluster_info = {i_cluster_bits: int; i_sectors_per_cluster: int64}
 
 (* I/O functions *)
-let stream_read fd buf = Lwt_cstruct.complete (Lwt_cstruct.read fd) buf
+
+(* Like Lwt_csruct.complete, but does not raise End_of_file, instead returns
+   the part of the Cstruct that was read up to EOF *)
+let read_complete op t =
+  let open Lwt in
+  let open Lwt.Syntax in
+  let rec loop t bytes_read =
+    let* n = op t in
+    let t = Cstruct.shift t n in
+    if Cstruct.length t = 0 then
+      return (bytes_read + n)
+    else if n = 0 then
+      return bytes_read
+    else
+      loop t (bytes_read + n)
+  in
+  let* bytes_read = loop t 0 in
+  return (Cstruct.sub t 0 bytes_read)
+
+let stream_read fd buf = read_complete (Lwt_cstruct.read fd) buf
 
 let complete_pwrite_bytes fd buf file_offset =
   let pwrite fd buf ~file_offset ~buf_offset ~len =
@@ -95,7 +114,7 @@ let read_cluster last_read_cluster fd cluster_bits alloc_func read_func i =
     Log.debug (fun f -> f "\tread_cluster %Lu\n" cluster) ;
     let open Lwt.Infix in
     Lwt.catch
-      (fun () -> read_func fd buf >>= fun () -> Lwt.return (Ok buf))
+      (fun () -> read_func fd buf >>= fun read_buf -> Lwt.return (Ok read_buf))
       (fun e ->
         Log.err (fun f ->
             f "read_cluster %Ld: low-level I/O exception %s" cluster
@@ -367,7 +386,7 @@ let start_stream_decode fd =
   (* Read a single sector from the beginning of the stream *)
   let sector_size = 512 in
   let buf = Cstruct.sub Io_page.(to_cstruct (get 1)) 0 sector_size in
-  let* () = stream_read fd buf in
+  let* buf = stream_read fd buf in
   (* Parse the header *)
   match Qcow_header.read buf with
   | Error (`Msg msg) ->
@@ -387,7 +406,7 @@ let start_stream_decode fd =
           let pages = Io_page.(to_cstruct (get npages)) in
           (* We've already read a single 512-byte sector *)
           let buf = Cstruct.sub pages 0 (cluster_size - 512) in
-          Lwt.async (fun () -> stream_read fd buf)
+          Lwt.ignore_result (stream_read fd buf)
       ) ;
 
       (* Parse all the tables to get a full map of data clusters *)
@@ -407,7 +426,8 @@ let copy_data ~progress_cb last_read_cluster cluster_bits input_fd output_fd
   let open Lwt.Syntax in
   let input_channel = Lwt_io.of_fd ~mode:Lwt_io.input input_fd in
   let complete_read_bytes ic buf =
-    Lwt_io.read_into_exactly ic buf 0 (Bytes.length buf)
+    let* () = Lwt_io.read_into_exactly ic buf 0 (Bytes.length buf) in
+    Lwt.return buf
   in
   let read_cluster_bytes =
     read_cluster last_read_cluster input_channel cluster_bits malloc_bytes
@@ -419,36 +439,41 @@ let copy_data ~progress_cb last_read_cluster cluster_bits input_fd output_fd
      behind a mutex *)
   let read_mutex = Lwt_mutex.create () in
 
-  let max_cluster, _ = Cluster.Map.max_binding data_cluster_map in
-  let cur_percent = ref 0 in
-  let thread (cluster, file_offset) =
-    (* Copy the entire cluster *)
-    Log.debug (fun f ->
-        f "copy cluster: %Lu, file_offset : %Lu\n" (Cluster.to_int64 cluster)
-          file_offset
-    ) ;
-    let now_percent = Cluster.(to_int cluster / (to_int max_cluster * 100)) in
-    if now_percent > !cur_percent then (
-      cur_percent := now_percent ;
-      progress_cb now_percent
-    ) ;
-    (* NOTE: no other Lwt promise can be called between the start of the thread
-       and the mutex locking or the order of reads would be disrupted.
-       Threads are woken up in the order they locked the mutex, so the order is
-       currently preserved.
-    *)
-    let* buf =
-      Lwt_mutex.with_lock read_mutex (fun () -> read_cluster_bytes cluster)
-    in
-    match buf with
-    | Ok buf ->
-        complete_pwrite_bytes output_fd buf (Int64.to_int file_offset)
-    | Error _ ->
-        failwith "I/O error"
-  in
-  let seq = Cluster.Map.to_seq data_cluster_map in
-  let seq = Lwt_seq.of_seq seq in
-  Lwt_seq.iter_n ~max_concurrency:8 thread seq
+  match Cluster.Map.max_binding_opt data_cluster_map with
+  | Some (max_cluster, _) ->
+      let cur_percent = ref 0 in
+      let thread (cluster, file_offset) =
+        (* Copy the entire cluster *)
+        Log.debug (fun f ->
+            f "copy cluster: %Lu, file_offset : %Lu\n"
+              (Cluster.to_int64 cluster) file_offset
+        ) ;
+        let now_percent =
+          Cluster.(to_int cluster / (to_int max_cluster * 100))
+        in
+        if now_percent > !cur_percent then (
+          cur_percent := now_percent ;
+          progress_cb now_percent
+        ) ;
+        (* NOTE: no other Lwt promise can be called between the start of the thread
+           and the mutex locking or the order of reads would be disrupted.
+           Threads are woken up in the order they locked the mutex, so the order is
+           currently preserved.
+        *)
+        let* buf =
+          Lwt_mutex.with_lock read_mutex (fun () -> read_cluster_bytes cluster)
+        in
+        match buf with
+        | Ok buf ->
+            complete_pwrite_bytes output_fd buf (Int64.to_int file_offset)
+        | Error _ ->
+            failwith "I/O error"
+      in
+      let seq = Cluster.Map.to_seq data_cluster_map in
+      let seq = Lwt_seq.of_seq seq in
+      Lwt_seq.iter_n ~max_concurrency:8 thread seq
+  | None ->
+      Lwt.return_unit
 
 let stream_decode ?(progress_cb = fun _x -> ()) ?header_info input_fd
     output_path =

@@ -1,0 +1,13 @@
+build: [
+  [
+    "dune"
+    "build"
+    "-p"
+    name
+    "-j"
+    jobs
+    "@install"
+    "@runtest" {with-test & arch != "arm32" & arch != "x86_32"}
+    "@doc" {with-doc}
+  ]
+]

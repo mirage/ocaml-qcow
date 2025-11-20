@@ -64,13 +64,13 @@
     (qcow (= :version))
     (qcow-stream (= :version))
     (conf-qemu-img :with-test)
-    (cmdliner (>= 1.1.0))
+    (cmdliner (and (>= 1.1.0) (< 2.0.0)))
     cstruct
     result
     unix-type-representations
     lwt
     (mirage-block (>= 3.0.0))
-    (sha (>= 1.10))
+    (sha (>= 1.15.4))
     sexplib
     logs
     (fmt (>= 0.8.2))
