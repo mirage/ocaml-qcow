@@ -64,12 +64,13 @@ let read t cluster =
          the one we want. Previous clusters will still be stored in the cache
          for when we need them later (since we can't seek back) *)
       let rec read_clusters ~from ~until =
-        let data = read_cluster from in
+        let open Lwt.Syntax in
+        let* data = read_cluster from in
         t.last_read_cluster := from ;
         if from < until then
           read_clusters ~from:(Cluster.succ from) ~until
         else
-          data
+          Lwt.return data
       in
       read_clusters ~from:next_cluster ~until:cluster
 

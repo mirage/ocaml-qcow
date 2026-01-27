@@ -1,3 +1,7 @@
+## 0.12.3 (2026-01-28)
+- qcow_cache: Fix skipped reads, which could lead to crashes
+  and corruption (last-genius #133)
+
 ## 0.12.2 (2025-11-20)
 - opam: metadata fixes discovered by CI (psafont #130, last-genius #131)
 - Use upstream diet package (psafont #113)
