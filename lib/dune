@@ -7,7 +7,8 @@
   (name qcow_types)
   (public_name qcow-types)
   (modules (:standard \ qcow qcow_debug qcow_block_cache qcow_cstructs
-                      qcow_padded qcow_recycler qcow_stream))
+                      qcow_padded qcow_recycler qcow_stream
+                      qcow_mapping qcow_mapping_test))
   (libraries
     astring
     (re_export cstruct)
@@ -27,18 +28,28 @@
 (library
   (name qcow_stream)
   (public_name qcow-stream)
-  (modules qcow_stream)
+  (modules qcow_stream qcow_mapping)
   (libraries
     cstruct-lwt
     io-page
     lwt.unix
     qcow_types
   )
+  (foreign_stubs
+    (language c)
+    (names qcow_mapping_stubs))
   (wrapped false)
   (preprocess
     (pps ppx_sexp_conv)
   )
 )
+
+(test
+  (modes native)
+  (name qcow_mapping_test)
+  (modules qcow_mapping_test)
+  (libraries alcotest qcow_stream)
+  )
 
 (library
   (name qcow)
