@@ -24,6 +24,8 @@ let ( ++ ) = Int64.add
 
 let ( // ) = Int64.div
 
+let ( ** ) = Int64.mul
+
 let src =
   let src =
     Logs.Src.create "qcow-stream" ~doc:"qcow2 with streaming capabilities"
@@ -190,8 +192,24 @@ let stream_make_cluster_map h size_sectors cluster_info metadata () =
         (Cluster.to_int64 !max_cluster)
         sectors_per_cluster
   ) ;
-  (* Construct a map of virtual clusters to physical offsets *)
-  let data_refs = ref Cluster.Map.empty in
+  (* Construct a mapping of physical clusters to virtual offsets
+
+     Since we don't know which offset data clusters start from, we need to
+     allocate an array covering all of the (estimated) physical clusters and
+     potentially resize it during processing.
+
+     All clusters are initialized with -1 to distinguish physical clusters
+     which are not data clusters.
+
+     For physical cluster Y, its virtual address is at index Y in the array.
+     *)
+  let x = Cluster.to_int64 !max_cluster in
+  (* Necessary physical size is <1.000125 of virtual size of the image,
+     given that a single L2 cluster (of default 65536 size) can point to
+     8192 data clusters. Larger cluster sizes reduce the necessary physical
+     size even further. *)
+  let physical_clusters_approx = x ++ (x // 8000L) in
+  let data_refs = Qcow_mapping.create physical_clusters_approx in
 
   let parse x =
     if x = Physical.unmapped then
@@ -230,12 +248,19 @@ let stream_make_cluster_map h size_sectors cluster_info metadata () =
     ) ;
     if cluster = Cluster.zero then
       ()
-    else if
+    else if is_table then (
       (* See note above, we need to account for table clusters when streaming
          since we don't know the physical size of the file *)
-      is_table
-    then
-      max_cluster := Cluster.(add !max_cluster (of_int64 1L))
+      (max_cluster := Cluster.(add !max_cluster (of_int64 1L))
+      ) ;
+
+      (* If we underestimated the physical size of the image, extend the array *)
+      let array_length = Qcow_mapping.length data_refs in
+      if Cluster.to_int64 !max_cluster > array_length then (
+        Log.debug (fun f -> f "resizing from %Lu\n" array_length) ;
+        Qcow_mapping.extend data_refs ((array_length ** 5L) // 4L)
+      )
+    )
   in
 
   (* scan the refcount table *)
@@ -285,7 +310,8 @@ let stream_make_cluster_map h size_sectors cluster_info metadata () =
       ( if cluster <> Cluster.zero then
           let virt_address = Virtual.{l1_index; l2_index; cluster= 0L} in
           let virt_address = Virtual.to_offset ~cluster_bits virt_address in
-          data_refs := Cluster.Map.add cluster virt_address !data_refs
+          let index = Cluster.to_int64 cluster in
+          Qcow_mapping.set data_refs index virt_address
       ) ;
       data_iter l1_index l2 l2_table_cluster (i + 1)
   in
@@ -338,7 +364,7 @@ let stream_make_cluster_map h size_sectors cluster_info metadata () =
       let* () = Metadata.remove_from_cache metadata l1_table_cluster in
       l1_iter (Int64.succ i)
   in
-  l1_iter 0L >>= fun () -> Lwt.return (Ok !data_refs)
+  l1_iter 0L >>= fun () -> Lwt.return (Ok data_refs)
 
 let stream_make last_read_cluster fd h sector_size =
   (* The virtual disk has 512 byte sectors *)
@@ -412,51 +438,40 @@ let copy_data ~progress_cb last_read_cluster cluster_bits input_fd output_fd
     let* () = Lwt_io.read_into_exactly ic buf 0 (Bytes.length buf) in
     Lwt.return buf
   in
+  let buf = malloc_bytes cluster_bits in
+  let get_buf _ = buf in
   let read_cluster_bytes =
-    read_cluster last_read_cluster input_channel cluster_bits malloc_bytes
+    read_cluster last_read_cluster input_channel cluster_bits get_buf
       complete_read_bytes
   in
 
-  (* We'll run multiple threads to try to overlap writes.
-     We can't overlap reads since it's a nonseekable stream, so lock them
-     behind a mutex *)
-  let read_mutex = Lwt_mutex.create () in
+  let max_cluster = Int64.to_int (Qcow_mapping.length data_cluster_map) in
+  let cur_percent = ref 0 in
 
-  match Cluster.Map.max_binding_opt data_cluster_map with
-  | Some (max_cluster, _) ->
-      let cur_percent = ref 0 in
-      let thread (cluster, file_offset) =
-        (* Copy the entire cluster *)
-        Log.debug (fun f ->
-            f "copy cluster: %Lu, file_offset : %Lu\n"
-              (Cluster.to_int64 cluster) file_offset
-        ) ;
-        let now_percent =
-          Cluster.(to_int cluster / (to_int max_cluster * 100))
-        in
-        if now_percent > !cur_percent then (
-          cur_percent := now_percent ;
-          progress_cb now_percent
-        ) ;
-        (* NOTE: no other Lwt promise can be called between the start of the thread
-           and the mutex locking or the order of reads would be disrupted.
-           Threads are woken up in the order they locked the mutex, so the order is
-           currently preserved.
-        *)
-        let* buf =
-          Lwt_mutex.with_lock read_mutex (fun () -> read_cluster_bytes cluster)
-        in
-        match buf with
-        | Ok buf ->
-            complete_pwrite_bytes output_fd buf (Int64.to_int file_offset)
-        | Error _ ->
-            failwith "I/O error"
-      in
-      let seq = Cluster.Map.to_seq data_cluster_map in
-      let seq = Lwt_seq.of_seq seq in
-      Lwt_seq.iter_n ~max_concurrency:8 thread seq
-  | None ->
-      Lwt.return_unit
+  for%lwt cluster = 0 to max_cluster - 1 do
+    let file_offset =
+      Qcow_mapping.get data_cluster_map (Int64.of_int cluster)
+    in
+    (* If physical cluster isn't a data cluster, it's initialized to -1 *)
+    if file_offset >= 0L then (
+      (* Copy the entire cluster *)
+      Log.debug (fun f ->
+          f "copy cluster: %d, file_offset : %Lu\n" cluster file_offset
+      ) ;
+      let now_percent = cluster / (max_cluster * 100) in
+      if now_percent > !cur_percent then (
+        cur_percent := now_percent ;
+        progress_cb now_percent
+      ) ;
+      let* buf = read_cluster_bytes (Cluster.of_int cluster) in
+      match buf with
+      | Ok buf ->
+          complete_pwrite_bytes output_fd buf (Int64.to_int file_offset)
+      | Error _ ->
+          failwith "I/O error"
+    ) else
+      Lwt.return ()
+  done
 
 let stream_decode ?(progress_cb = fun _x -> ()) ?header_info input_fd
     output_path =
