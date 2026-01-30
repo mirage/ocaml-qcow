@@ -154,11 +154,8 @@ let stream_make_cluster_map h size_sectors cluster_info metadata () =
     Cluster.to_int64 @@ Physical.cluster ~cluster_bits h.Header.l1_table_offset
   in
   let l1_table_clusters =
-    Int64.(
-      div
-        (round_up (of_int32 h.Header.l1_size) int64s_per_cluster)
-        int64s_per_cluster
-    )
+    Int64.(round_up (of_int32 h.Header.l1_size) int64s_per_cluster)
+    // int64s_per_cluster
   in
 
   (* As opposed to make_cluster_map, where size_sectors comes from known
@@ -222,8 +219,8 @@ let stream_make_cluster_map h size_sectors cluster_info metadata () =
             (Cluster.to_string c) w
       ) ;
       let src =
-        Int64.add (Int64.of_int w)
-          (Cluster.to_int64 c <| Int32.to_int h.Header.cluster_bits)
+        Int64.of_int w
+        ++ (Cluster.to_int64 c <| Int32.to_int h.Header.cluster_bits)
       in
       let dst =
         Cluster.to_int64 cluster <| Int32.to_int h.Header.cluster_bits
@@ -246,7 +243,7 @@ let stream_make_cluster_map h size_sectors cluster_info metadata () =
       Lwt.return (Ok ())
     else
       let refcount_cluster =
-        Cluster.of_int64 @@ Int64.(add refcount_start_cluster i)
+        Cluster.of_int64 @@ (refcount_start_cluster ++ i)
       in
       Log.debug (fun f ->
           f "reading refcount table in cluster %Lu\n"
@@ -319,9 +316,7 @@ let stream_make_cluster_map h size_sectors cluster_info metadata () =
   refcount_iter 0L >>= fun () ->
   (* scan the L1 and L2 tables, marking the L2 and data clusters *)
   let rec l1_iter i =
-    let l1_table_cluster =
-      Cluster.of_int64 @@ Int64.(add l1_table_start_cluster i)
-    in
+    let l1_table_cluster = Cluster.of_int64 @@ (l1_table_start_cluster ++ i) in
     Log.debug (fun f ->
         f "reading l1 table in cluster %Lu\n" (Cluster.to_int64 l1_table_cluster)
     ) ;
@@ -341,10 +336,10 @@ let stream_make_cluster_map h size_sectors cluster_info metadata () =
 
 let stream_make last_read_cluster fd h sector_size =
   (* The virtual disk has 512 byte sectors *)
-  let size_sectors = Int64.(div h.Header.size 512L) in
+  let size_sectors = h.Header.size // 512L in
   let cluster_bits = Int32.to_int h.Header.cluster_bits in
   let cluster_size = 1L <| cluster_bits in
-  let sectors_per_cluster = Int64.(div cluster_size (of_int sector_size)) in
+  let sectors_per_cluster = cluster_size // Int64.of_int sector_size in
   Log.debug (fun f ->
       f "size: %Lu\n cluster_size: %Lu\n size_sectors: %Lu\n size_sector: %d\n"
         h.Header.size cluster_size size_sectors sector_size
