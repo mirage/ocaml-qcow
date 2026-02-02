@@ -42,6 +42,39 @@ let basic_test () =
 
   ()
 
+let interval_test () =
+  (* Set a few of the cells, representing a sparse disk *)
+  let arr = Arr.create 16L in
+  for i = 2 to 4 do
+    let i = Int64.of_int i in
+    Arr.set arr i i
+  done ;
+
+  (* Non-subsequent clusters next to each other *)
+  Arr.set arr 6L 0L ;
+  Arr.set arr 7L 6L ;
+  Arr.set arr 8L 8L ;
+
+  for i = 10 to 13 do
+    let i = Int64.of_int i in
+    Arr.set arr i i
+  done ;
+
+  (* Verify only the intervals filled with subsequent clusters
+     are reported as populated *)
+  let l = Arr.to_interval_seq arr 0L |> List.of_seq in
+  Alcotest.(check' @@ list @@ pair int64 int64)
+    ~msg:"wrong interval" ~actual:l
+    ~expected:[(2L, 4L); (0L, 0L); (6L, 6L); (8L, 8L); (10L, 13L)] ;
+  ()
+
 let () =
   Alcotest.run "Test qcow_mapping library"
-    [("Basic tests", [("test", `Quick, basic_test)])]
+    [
+      ( "Basic tests"
+      , [
+          ("basic_test", `Quick, basic_test)
+        ; ("interval_test", `Quick, interval_test)
+        ]
+      )
+    ]

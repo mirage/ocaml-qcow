@@ -137,3 +137,41 @@ stub_qcow_mapping_length (value t_val)
 
     CAMLreturn(result);
 }
+
+
+CAMLprim value
+stub_qcow_mapping_get_sparse_interval (value t_val, value index_val, value cluster_bits_val)
+{
+    CAMLparam3(t_val, index_val, cluster_bits_val);
+    CAMLlocal1(result);
+    result = caml_alloc_tuple(3);
+
+    array* arr = qcow_mapping_arr_of_val(t_val);
+
+    uint64_t cluster_bits = Int64_val(cluster_bits_val);
+    uint64_t diff_bw_next_clusters = 1 << cluster_bits;
+    uint64_t left_index = Int64_val(index_val);
+    uint64_t right_index = left_index;
+
+    // Find the longest interval of subsequent allocated data clusters
+    // (data clusters are subsequent if they're located right next to each
+    // other on the virtual disk), return the index to be used in the next
+    // search iteration and the [interval_start, interval_end] pair of virtual
+    // clusters (both inclusive)
+    for (size_t i = left_index+1; i < arr->length; i++, right_index++) {
+        if (arr->a[i-1] == -1) {
+            if (arr->a[i] == -1 && i == (arr->length-1)) {
+                CAMLreturn(Val_none);
+            }
+            left_index++;
+        } else if (arr->a[i-1] + diff_bw_next_clusters != arr->a[i]) {
+            break;
+        }
+    }
+
+    Store_field(result, 0, caml_copy_int64(right_index));
+    Store_field(result, 1, caml_copy_int64((arr->a[left_index]) >> cluster_bits));
+    Store_field(result, 2, caml_copy_int64((arr->a[right_index]) >> cluster_bits));
+
+    CAMLreturn(caml_alloc_some(result));
+}
