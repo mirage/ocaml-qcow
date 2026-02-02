@@ -192,7 +192,6 @@ let stream_make_cluster_map h size_sectors cluster_info metadata () =
         (Cluster.to_int64 !max_cluster)
         sectors_per_cluster
   ) ;
-  let refs = ref Cluster.Map.empty in
   (* Construct a map of virtual clusters to physical offsets *)
   let data_refs = ref Cluster.Map.empty in
 
@@ -233,29 +232,12 @@ let stream_make_cluster_map h size_sectors cluster_info metadata () =
     ) ;
     if cluster = Cluster.zero then
       ()
-    else (
-      if Cluster.Map.mem cluster !refs then (
-        let c', w' = Cluster.Map.find cluster !refs in
-        Log.err (fun f ->
-            f "Found two references to cluster %s: %s.%d and %s.%d"
-              (Cluster.to_string cluster)
-              (Cluster.to_string c) w (Cluster.to_string c') w'
-        ) ;
-        raise
-          (Error.Duplicate_reference
-             ( (Cluster.to_int64 c, w)
-             , (Cluster.to_int64 c', w')
-             , Cluster.to_int64 cluster
-             )
-          )
-      ) ;
+    else if
       (* See note above, we need to account for table clusters when streaming
          since we don't know the physical size of the file *)
-      ( if is_table then
-          max_cluster := Cluster.(add !max_cluster (of_int64 1L))
-      ) ;
-      refs := Cluster.Map.add cluster rf !refs
-    )
+      is_table
+    then
+      max_cluster := Cluster.(add !max_cluster (of_int64 1L))
   in
 
   (* scan the refcount table *)
