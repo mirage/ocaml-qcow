@@ -83,6 +83,9 @@ val read :
   -> ('a, error) result Lwt.t
 (** Read the contents of the given cluster and provide them to the given function *)
 
+val remove_from_cache : t -> Cluster.t -> unit Lwt.t
+(** Removes [cluster] from the cache *)
+
 val update :
      ?client:Qcow_locks.Client.t
   -> t

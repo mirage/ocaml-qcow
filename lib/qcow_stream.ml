@@ -139,6 +139,7 @@ exception Compressed_unsupported
 *)
 let stream_make_cluster_map h size_sectors cluster_info metadata () =
   let open Lwt_error.Infix in
+  let open Lwt.Syntax in
   let cluster_bits, sectors_per_cluster =
     match cluster_info with
     | {i_cluster_bits; i_sectors_per_cluster} ->
@@ -264,7 +265,9 @@ let stream_make_cluster_map h size_sectors cluster_info metadata () =
           in
           loop 0
       )
-      >>= fun () -> refcount_iter (Int64.succ i)
+      >>= fun () ->
+      let* () = Metadata.remove_from_cache metadata refcount_cluster in
+      refcount_iter (Int64.succ i)
   in
 
   (* construct the map of data clusters *)
@@ -308,6 +311,7 @@ let stream_make_cluster_map h size_sectors cluster_info metadata () =
         )
         >>= fun l2 ->
         data_iter l1_index l2 l2_table_cluster 0 >>= fun () ->
+        let* () = Metadata.remove_from_cache metadata l2_table_cluster in
         l2_iter l1 l1_table_cluster (i + 1)
       ) else
         l2_iter l1 l1_table_cluster (i + 1)
@@ -330,7 +334,9 @@ let stream_make_cluster_map h size_sectors cluster_info metadata () =
       >>= fun l1 ->
       (* Count L1 table clusters against max_cluster *)
       (max_cluster := Cluster.(add !max_cluster (of_int64 1L))) ;
-      l2_iter l1 l1_table_cluster 0 >>= fun () -> l1_iter (Int64.succ i)
+      l2_iter l1 l1_table_cluster 0 >>= fun () ->
+      let* () = Metadata.remove_from_cache metadata l1_table_cluster in
+      l1_iter (Int64.succ i)
   in
   l1_iter 0L >>= fun () -> Lwt.return (Ok !data_refs)
 
