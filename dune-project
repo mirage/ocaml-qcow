@@ -24,10 +24,12 @@
     (diet (>= 0.3.0))
     logs
     lwt
+    lwt_ppx
     (mirage-block (>= 3.0.0))
     ppx_sexp_conv
     prometheus
     sexplib
+    (alcotest :with-test)
   )
 )
 
