@@ -1,3 +1,8 @@
+## 0.13.0 (2026-02-06)
+- qcow_stream: Breaking changes to the interface, with the allocated data
+  clusters now returned in Qcow_mapping.t. Great reductions in memory usage,
+  various other optimizations (last-genius #134)
+
 ## 0.12.3 (2026-01-28)
 - qcow_cache: Fix skipped reads, which could lead to crashes
   and corruption (last-genius #133)
