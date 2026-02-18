@@ -128,6 +128,11 @@ let read ?client t cluster f =
       Cache.read t.cache cluster >>= fun data -> f {t; data; cluster}
   )
 
+let remove_from_cache t cluster =
+  Locks.Read.with_lock t.locks cluster (fun () ->
+      Lwt.return (Cache.remove t.cache cluster)
+  )
+
 (** Read the contents of [cluster], transform it via function [f] and write
     back the results, all with the lock held. *)
 let update ?client t cluster f =

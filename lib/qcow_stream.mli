@@ -1,11 +1,10 @@
 module Header = Qcow_header
 module Cache = Qcow_cache
-open Qcow_types
 
 exception Reference_outside_file of int64 * int64
 
 val start_stream_decode :
-  Lwt_unix.file_descr -> (int64 * int32 * int64 ref * int64 Cluster.Map.t) Lwt.t
+  Lwt_unix.file_descr -> (int64 * int32 * int64 ref * Qcow_mapping.t) Lwt.t
 (** Decodes QCOW header and tables from the beginning of the stream,
     constructing a map of data clusters.
     Returns (virtual_size, cluster_bits, last_read_cluster, data_cluster_map)
@@ -17,14 +16,14 @@ val copy_data :
   -> int32
   -> Lwt_unix.file_descr
   -> Lwt_unix.file_descr
-  -> int64 Cluster.Map.t
+  -> Qcow_mapping.t
   -> unit Lwt.t
 (** [copy_data last_read_cluster cluster_bits input_fd output_fd data_cluster_map]
     Copies data cluster-by-cluster concurrently *)
 
 val stream_decode :
      ?progress_cb:(int -> unit)
-  -> ?header_info:int64 * int32 * int64 ref * int64 Cluster.Map.t
+  -> ?header_info:int64 * int32 * int64 ref * Qcow_mapping.t
   -> Unix.file_descr
   -> string
   -> unit

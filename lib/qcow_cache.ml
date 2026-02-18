@@ -89,8 +89,11 @@ let write t cluster data =
 
 let remove t cluster =
   if Cluster.Map.mem cluster t.clusters then
-    Printf.fprintf stderr "Dropping cache for cluster %s\n"
-      (Cluster.to_string cluster) ;
+    Log.err (fun f ->
+        f "Dropping cache for cluster %s (length is %d)\n"
+          (Cluster.to_string cluster)
+          (Cluster.Map.cardinal t.clusters)
+    ) ;
   t.clusters <- Cluster.Map.remove cluster t.clusters
 
 let resize t new_size_clusters =
