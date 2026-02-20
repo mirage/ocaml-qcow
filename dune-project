@@ -24,12 +24,11 @@
     (diet (>= 0.3.0))
     logs
     lwt
-    lwt_ppx
+    (lwt_ppx (>= 1.0.1))
     (mirage-block (>= 3.0.0))
     ppx_sexp_conv
     prometheus
     sexplib
-    (alcotest :with-test)
   )
 )
 
@@ -44,10 +43,13 @@
   (authors "David Scott")
   (maintenance_intent "latest")
   (depends
+    (ocaml (and :with_test (>= 4.13.0)))
+    (alcotest :with-test)
     (qcow-types (= :version))
     cstruct-lwt
     io-page
     (lwt (>= 5.5.0))
+    (lwt_ppx (>= 2.0.3))
   )
 )
 
@@ -113,7 +115,7 @@
     prometheus
     unix-type-representations
     stdlib-shims
-    sha
+    (sha (>= 1.15.4))
     ppx_deriving
     ppx_sexp_conv
     (ounit :with-test)
