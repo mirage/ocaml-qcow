@@ -317,30 +317,33 @@ let stream_make_cluster_map h size_sectors cluster_info metadata () =
   in
 
   (* iterate over pointers to L2 clusters *)
-  let rec l2_iter l1 l1_table_cluster i =
-    if i >= Metadata.Physical.len l1 then
+  let rec l2_iter l1 l1_table_cluster l1_global_index l1_cluster_index =
+    if l1_cluster_index >= Metadata.Physical.len l1 then
       Lwt.return (Ok ())
     else
-      let l1_index = Int64.of_int i in
       (* index in the L1 table *)
-      let l2_table_cluster = parse (Metadata.Physical.get l1 i) in
+      let l2_table_cluster =
+        parse (Metadata.Physical.get l1 l1_cluster_index)
+      in
       if l2_table_cluster <> Cluster.zero then (
         Log.debug (fun f ->
             f "reading l2 table in cluster %Lu\n"
               (Cluster.to_int64 l2_table_cluster)
         ) ;
         (* Count L2 table clusters against max_cluster *)
-        mark (l1_table_cluster, i) l2_table_cluster true ;
+        mark (l1_table_cluster, l1_cluster_index) l2_table_cluster true ;
         Metadata.read metadata l2_table_cluster (fun c ->
             let l2 = Metadata.Physical.of_contents c in
             Lwt.return (Ok l2)
         )
         >>= fun l2 ->
-        data_iter l1_index l2 l2_table_cluster 0 >>= fun () ->
+        data_iter l1_global_index l2 l2_table_cluster 0 >>= fun () ->
         let* () = Metadata.remove_from_cache metadata l2_table_cluster in
-        l2_iter l1 l1_table_cluster (i + 1)
+        l2_iter l1 l1_table_cluster (l1_global_index ++ 1L)
+          (l1_cluster_index + 1)
       ) else
-        l2_iter l1 l1_table_cluster (i + 1)
+        l2_iter l1 l1_table_cluster (l1_global_index ++ 1L)
+          (l1_cluster_index + 1)
   in
 
   refcount_iter 0L >>= fun () ->
@@ -358,9 +361,11 @@ let stream_make_cluster_map h size_sectors cluster_info metadata () =
           Lwt.return (Ok l1)
       )
       >>= fun l1 ->
+      let indices_in_cluster = Int64.of_int (Metadata.Physical.len l1) in
+      let l1_global_index = i ** indices_in_cluster in
       (* Count L1 table clusters against max_cluster *)
       (max_cluster := Cluster.(add !max_cluster (of_int64 1L))) ;
-      l2_iter l1 l1_table_cluster 0 >>= fun () ->
+      l2_iter l1 l1_table_cluster l1_global_index 0 >>= fun () ->
       let* () = Metadata.remove_from_cache metadata l1_table_cluster in
       l1_iter (Int64.succ i)
   in
