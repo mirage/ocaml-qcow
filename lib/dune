@@ -46,6 +46,7 @@
 
 (test
   (modes native)
+  (package qcow-stream)
   (name qcow_mapping_test)
   (modules qcow_mapping_test)
   (libraries alcotest qcow_stream)
