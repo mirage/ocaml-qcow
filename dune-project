@@ -1,7 +1,6 @@
 (lang dune 3.18)
 
 (cram enable)
-(subst disabled)
 
 (name qcow)
 (formatting (enabled_for ocaml))

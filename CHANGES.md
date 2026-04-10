@@ -1,3 +1,6 @@
+## 0.14.0 (2026-04-10)
+- qcow_stream: Fix handling of images >4tb (last-genius #136)
+
 ## 0.13.0 (2026-02-06)
 - qcow_stream: Breaking changes to the interface, with the allocated data
   clusters now returned in Qcow_mapping.t. Great reductions in memory usage,
