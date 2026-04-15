@@ -43,7 +43,7 @@
   (maintenance_intent "latest")
   (depends
     (ocaml (>= 4.13.0))
-    (alcotest :with-test)
+    (alcotest (and :with-test (>= 1.2.0)))
     (qcow-types (= :version))
     cstruct-lwt
     io-page

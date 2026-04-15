@@ -12,7 +12,7 @@ bug-reports: "https://github.com/mirage/ocaml-qcow/issues"
 depends: [
   "dune" {>= "3.18"}
   "ocaml" {>= "4.13.0"}
-  "alcotest" {with-test}
+  "alcotest" {with-test & >= "1.2.0"}
   "qcow-types" {= version}
   "cstruct-lwt"
   "io-page"
