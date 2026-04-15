@@ -11,7 +11,7 @@ homepage: "https://github.com/mirage/ocaml-qcow"
 bug-reports: "https://github.com/mirage/ocaml-qcow/issues"
 depends: [
   "dune" {>= "3.18"}
-  "ocaml" {with_test & >= "4.13.0"}
+  "ocaml" {>= "4.13.0"}
   "alcotest" {with-test}
   "qcow-types" {= version}
   "cstruct-lwt"
