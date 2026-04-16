@@ -42,8 +42,8 @@
   (authors "David Scott")
   (maintenance_intent "latest")
   (depends
-    (ocaml (and :with_test (>= 4.13.0)))
-    (alcotest :with-test)
+    (ocaml (>= 4.13.0))
+    (alcotest (and :with-test (>= 1.2.0)))
     (qcow-types (= :version))
     cstruct-lwt
     io-page

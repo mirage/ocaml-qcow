@@ -11,3 +11,10 @@ build: [
     "@doc" {with-doc}
   ]
 ]
+x-ci-accept-failures: [
+  "freebsd-14.3"
+  "macos-homebrew"
+  "opensuse-15.6"
+  "opensuse-16.0"
+  "opensuse-tumbleweed"
+]
