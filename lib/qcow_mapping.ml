@@ -10,6 +10,8 @@ external set : t -> int64 -> int64 -> unit = "stub_qcow_mapping_set"
 
 external length : t -> int64 = "stub_qcow_mapping_length"
 
+external filled : t -> int64 = "stub_qcow_mapping_filled"
+
 external get_sparse_interval_stub :
   t -> int64 -> int64 -> (int64 * int64 * int64) option
   = "stub_qcow_mapping_get_sparse_interval"

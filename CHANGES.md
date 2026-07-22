@@ -1,3 +1,6 @@
+## 0.15.0 (2026-07-21)
+- qcow_stream: Fix reporting of progress (last-genius #139)
+
 ## 0.14.0 (2026-04-10)
 - qcow_stream: Fix handling of images >4tb (last-genius #136)
 

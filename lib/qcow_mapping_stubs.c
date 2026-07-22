@@ -11,6 +11,7 @@
 
 typedef struct array {
     uint64_t length;
+    uint64_t filled;
     int64_t* a;
 } array;
 
@@ -50,6 +51,7 @@ stub_qcow_mapping_create (value length_val)
     array *arr = malloc(sizeof *arr);
 
     arr->length = Int64_val(length_val);
+    arr->filled = 0;
     result = caml_alloc_custom(&qcow_mapping_ops, sizeof(array *), 0, 1);
 
     caml_release_runtime_system();
@@ -122,6 +124,7 @@ stub_qcow_mapping_set (value t_val, value index_val, value new_val)
     uint64_t index = Int64_val(index_val);
     int64_t new = Int64_val(new_val);
     arr->a[index] = new;
+    arr->filled++;
 
     CAMLreturn(Val_unit);
 }
@@ -138,6 +141,17 @@ stub_qcow_mapping_length (value t_val)
     CAMLreturn(result);
 }
 
+CAMLprim value
+stub_qcow_mapping_filled (value t_val)
+{
+    CAMLparam1(t_val);
+    CAMLlocal1(result);
+
+    array *arr = qcow_mapping_arr_of_val(t_val);
+    result = caml_copy_int64(arr->filled);
+
+    CAMLreturn(result);
+}
 
 CAMLprim value
 stub_qcow_mapping_get_sparse_interval (value t_val, value index_val, value cluster_bits_val)

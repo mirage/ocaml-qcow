@@ -451,6 +451,8 @@ let copy_data ~progress_cb last_read_cluster cluster_bits input_fd output_fd
   in
 
   let max_cluster = Int64.to_int (Qcow_mapping.length data_cluster_map) in
+  let filled_clusters = Int64.to_int (Qcow_mapping.filled data_cluster_map) in
+  let processed_clusters = ref 0 in
   let cur_percent = ref 0 in
 
   for%lwt cluster = 0 to max_cluster - 1 do
@@ -463,12 +465,13 @@ let copy_data ~progress_cb last_read_cluster cluster_bits input_fd output_fd
       Log.debug (fun f ->
           f "copy cluster: %d, file_offset : %Lu\n" cluster file_offset
       ) ;
-      let now_percent = cluster / (max_cluster * 100) in
+      let now_percent = (!processed_clusters * 100) / filled_clusters in
       if now_percent > !cur_percent then (
         cur_percent := now_percent ;
         progress_cb now_percent
       ) ;
       let* buf = read_cluster_bytes (Cluster.of_int cluster) in
+      processed_clusters := !processed_clusters + 1;
       match buf with
       | Ok buf ->
           complete_pwrite_bytes output_fd buf (Int64.to_int file_offset)

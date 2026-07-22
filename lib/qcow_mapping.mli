@@ -10,6 +10,8 @@ val set : t -> int64 -> int64 -> unit
 
 val length : t -> int64
 
+val filled : t -> int64
+
 (** [to_interval_seq t cluster_bits] returns a sequence of allocated virtual
     data cluster intervals, intended to be used with sparse disks.
 
